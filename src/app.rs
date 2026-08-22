@@ -173,35 +173,50 @@ impl CrittoUtil {
 
 impl Render for CrittoUtil {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        // The Root wrapping this view does not render dialogs/sheets/notifications
+        // itself in the pinned gpui-component revision — the top-level view has to
+        // pull those layers in explicitly, or `window.open_dialog(...)` etc. push
+        // state that never gets painted.
+        let sheet_layer = gpui_component::Root::render_sheet_layer(window, cx);
+        let dialog_layer = gpui_component::Root::render_dialog_layer(window, cx);
+        let notification_layer = gpui_component::Root::render_notification_layer(window, cx);
+
         div()
             .id("crittoutil-root")
-            .flex()
-            .flex_row()
-            .gap_3()
-            .p_3()
             .size_full()
-            .bg(cx.theme().background)
-            .text_color(cx.theme().foreground)
-            .child(views::sidebar::render(self, window, cx))
             .child(
-                style::card(
-                    div()
-                        .id("crittoutil-content")
-                        .flex_1()
-                        .h_full()
-                        .p_5()
-                        .overflow_hidden(),
-                    cx,
-                )
-                .child(match self.route {
-                        Route::Home => views::home::render(self, window, cx).into_any_element(),
-                        Route::Converter => views::converter::render(self, window, cx).into_any_element(),
-                        Route::KeyGenerator => views::key_generator::render(self, window, cx).into_any_element(),
-                        Route::Encrypter => views::encrypter::render(self, window, cx).into_any_element(),
-                        Route::Decrypter => views::decrypter::render(self, window, cx).into_any_element(),
-                        Route::FileHasher => views::file_hasher::render(self, window, cx).into_any_element(),
-                    }),
+                div()
+                    .flex()
+                    .flex_row()
+                    .gap_3()
+                    .p_3()
+                    .size_full()
+                    .bg(cx.theme().background)
+                    .text_color(cx.theme().foreground)
+                    .child(views::sidebar::render(self, window, cx))
+                    .child(
+                        style::card(
+                            div()
+                                .id("crittoutil-content")
+                                .flex_1()
+                                .h_full()
+                                .p_5()
+                                .overflow_hidden(),
+                            cx,
+                        )
+                        .child(match self.route {
+                                Route::Home => views::home::render(self, window, cx).into_any_element(),
+                                Route::Converter => views::converter::render(self, window, cx).into_any_element(),
+                                Route::KeyGenerator => views::key_generator::render(self, window, cx).into_any_element(),
+                                Route::Encrypter => views::encrypter::render(self, window, cx).into_any_element(),
+                                Route::Decrypter => views::decrypter::render(self, window, cx).into_any_element(),
+                                Route::FileHasher => views::file_hasher::render(self, window, cx).into_any_element(),
+                            }),
+                    ),
             )
+            .children(sheet_layer)
+            .children(dialog_layer)
+            .children(notification_layer)
     }
 }
 

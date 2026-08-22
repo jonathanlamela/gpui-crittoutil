@@ -1,11 +1,11 @@
 use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
-use gpui_component::Sizable as _;
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
 use crate::crypto_meta::{self, DECRYPT_ALGORITHMS};
+use crate::views::field_with_picker;
 
 pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
     let d = &app.decrypter;
@@ -50,30 +50,32 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .child(Input::new(&d.payload).cleanable(true)),
         )
         .child(if alg.iv_length.is_some() {
-            div()
-                .flex()
-                .flex_col()
-                .gap_1()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child("IV"))
-                .child(Input::new(&d.iv).cleanable(true))
-                .child(pick_from_history_row(app, "decrypter-pick-iv", cx, |this, name, window, cx| {
+            field_with_picker(
+                app,
+                cx,
+                "IV",
+                Input::new(&d.iv).cleanable(true),
+                "decrypter-pick-iv",
+                "Pick IV",
+                |this, name, window, cx| {
                     this.decrypter.iv.update(cx, |s, cx| s.set_value(name, window, cx));
-                }))
-                .into_any_element()
+                },
+            )
+            .into_any_element()
         } else {
             div().into_any_element()
         })
-        .child(
-            div()
-                .flex()
-                .flex_col()
-                .gap_1()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Key"))
-                .child(Input::new(&d.key).cleanable(true))
-                .child(pick_from_history_row(app, "decrypter-pick-key", cx, |this, name, window, cx| {
-                    this.decrypter.key.update(cx, |s, cx| s.set_value(name, window, cx));
-                })),
-        )
+        .child(field_with_picker(
+            app,
+            cx,
+            "Key",
+            Input::new(&d.key).cleanable(true),
+            "decrypter-pick-key",
+            "Pick key",
+            |this, name, window, cx| {
+                this.decrypter.key.update(cx, |s, cx| s.set_value(name, window, cx));
+            },
+        ))
         .child(
             Button::new("decrypter-decrypt-btn")
                 .label("Decrypt")
@@ -172,32 +174,4 @@ fn alg_row(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
                 cx.notify();
             }))
         })))
-}
-
-fn pick_from_history_row(
-    app: &CrittoUtil,
-    id_prefix: &'static str,
-    cx: &mut Context<CrittoUtil>,
-    on_pick: impl Fn(&mut CrittoUtil, &str, &mut Window, &mut Context<CrittoUtil>) + 'static + Clone,
-) -> impl IntoElement {
-    if app.key_history.is_empty() {
-        return div().into_any_element();
-    }
-    div()
-        .flex()
-        .gap_1()
-        .flex_wrap()
-        .children(app.key_history.iter().take(5).enumerate().map(|(i, entry)| {
-            let name = entry.name.clone();
-            let id: gpui::ElementId = format!("{id_prefix}-{i}").into();
-            let on_pick = on_pick.clone();
-            Button::new(id)
-                .label(format!("{}… ({} bit)", &entry.name.chars().take(6).collect::<String>(), entry.bits))
-                .ghost()
-                .xsmall()
-                .on_click(cx.listener(move |this, _, window, cx| {
-                    on_pick(this, &name, window, cx);
-                }))
-        }))
-        .into_any_element()
 }
