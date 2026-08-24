@@ -5,6 +5,8 @@ pub mod key_generator;
 pub mod encrypter;
 pub mod decrypter;
 pub mod file_hasher;
+pub mod session_picker;
+pub mod agent_panel;
 
 use gpui::{Context, Corners, IntoElement, ParentElement, SharedString, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;

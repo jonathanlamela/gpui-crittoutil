@@ -1,8 +1,10 @@
+mod agent;
 mod app;
 mod converter;
 mod crypto;
 mod crypto_meta;
 mod home_search;
+mod session;
 mod theme;
 mod ui;
 mod views;

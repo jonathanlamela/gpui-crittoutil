@@ -2,7 +2,8 @@ use gpui::{
     BoxShadow, Context, ElementId, InteractiveElement, IntoElement, ParentElement,
     StatefulInteractiveElement as _, Styled, Window, div, point, prelude::FluentBuilder as _, px,
 };
-use gpui_component::{ActiveTheme as _, Icon, IconName};
+use gpui_component::button::{Button, ButtonVariants as _};
+use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _};
 
 use crate::app::{CrittoUtil, Route};
 
@@ -77,13 +78,35 @@ pub fn render(
                         .rounded(radius)
                         .bg(cx.theme().sidebar)
                         .child(
-                            div().flex().items_center().gap_2().p_3().child(
-                                div()
-                                    .text_base()
-                                    .font_weight(gpui::FontWeight::BOLD)
-                                    .text_color(cx.theme().sidebar_foreground)
-                                    .child("CrittoUtil"),
-                            ),
+                            div()
+                                .flex()
+                                .items_center()
+                                .justify_between()
+                                .gap_2()
+                                .p_3()
+                                .child(
+                                    div()
+                                        .text_base()
+                                        .font_weight(gpui::FontWeight::BOLD)
+                                        .text_color(cx.theme().sidebar_foreground)
+                                        .child("CrittoUtil"),
+                                )
+                                .child(
+                                    Button::new("toggle-agent-mode")
+                                        .icon(
+                                            Icon::new(IconName::Bot).text_color(if app.agent.open {
+                                                cx.theme().primary_foreground
+                                            } else {
+                                                cx.theme().sidebar_foreground
+                                            }),
+                                        )
+                                        .tooltip("Agent")
+                                        .small()
+                                        .map(|btn| if app.agent.open { btn.primary() } else { btn.outline() })
+                                        .on_click(cx.listener(|this, _, _window, cx| {
+                                            this.toggle_agent(cx);
+                                        })),
+                                ),
                         )
                         .child({
                             let mut items = Vec::new();
@@ -100,7 +123,26 @@ pub fn render(
                                 .pb_2()
                                 .overflow_y_scroll()
                                 .children(items)
-                        }),
+                        })
+                        .child(
+                            div()
+                                .id("sidebar-close-session")
+                                .flex()
+                                .items_center()
+                                .gap_2()
+                                .px_2()
+                                .py_2()
+                                .m_2()
+                                .rounded(px(8.0))
+                                .text_sm()
+                                .text_color(cx.theme().sidebar_foreground.opacity(0.7))
+                                .hover(|this| this.bg(cx.theme().muted))
+                                .child(Icon::new(IconName::ArrowLeft))
+                                .child("All sessions")
+                                .on_click(cx.listener(|this, _, _window, cx| {
+                                    this.close_session(cx);
+                                })),
+                        ),
                 ),
         )
 }

@@ -7,7 +7,18 @@ of a webview.
 
 ## What it does
 
-Six screens, navigated from the left sidebar:
+The app opens on a **session picker**: "New session" or resume one from the "Recent sessions"
+list. A session is just its key/IV history (`session::Session`), persisted as JSON at
+`~/Library/Application Support/gpui-crittoutil/sessions.json` — per-screen form fields are
+transient UI state and aren't part of what a session restores. "All sessions" at the bottom of
+the sidebar returns to the picker (saving the current session first).
+
+A small bot icon in the sidebar header toggles **agentic mode**: a chat panel (right side of the
+window) talking to a local LM Studio server (`http://localhost:1234/v1` by default) that can call
+this app's own `generate_key`/`encrypt`/`decrypt` as tools (see `src/agent.rs`). No dedicated top
+bar — the toggle lives in the sidebar header to avoid adding a permanent strip above the layout.
+
+Inside a session, six screens, navigated from the left sidebar:
 - **Home** — free-text search that scores against per-feature keywords and suggests a screen.
 - **Converter** — text ↔ binary ↔ Base64.
 - **Key Generator** — random alphanumeric key generation (64–512 bit), with history.
