@@ -6,7 +6,7 @@ use gpui_component::ActiveTheme as _;
 use gpui_component::Disableable as _;
 use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
-use gpui_component::input::Input;
+use gpui_component::input::Textarea;
 use gpui_component::text::markdown;
 use gpui_component::{Icon, Sizable as _};
 
@@ -41,7 +41,12 @@ pub fn render(
                 .p_3()
                 .border_b_1()
                 .border_color(cx.theme().border)
-                .child(div().text_sm().font_weight(gpui::FontWeight::BOLD).child("Agent")),
+                .child(
+                    div()
+                        .text_sm()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Agent"),
+                ),
         )
         .child({
             let mut messages = div()
@@ -80,7 +85,7 @@ pub fn render(
                 .p_3()
                 .border_t_1()
                 .border_color(cx.theme().border)
-                .child(Input::new(&a.input).cleanable(true))
+                .child(Textarea::new(&a.input).w_full().h(gpui::rems(4.5)))
                 .child(
                     Button::new("agent-send-btn")
                         .icon(IconName::ArrowRight)
@@ -96,8 +101,14 @@ pub fn render(
 }
 
 enum DisplayItem {
-    Message { role: String, content: String },
-    Tools { group_index: usize, calls: Vec<ToolCallDisplay> },
+    Message {
+        role: String,
+        content: String,
+    },
+    Tools {
+        group_index: usize,
+        calls: Vec<ToolCallDisplay>,
+    },
 }
 
 struct ToolCallDisplay {
@@ -130,14 +141,23 @@ fn build_display_items(messages: &[ChatMessage]) -> Vec<DisplayItem> {
                     .display
                     .clone()
                     .unwrap_or_else(|| ("tool".to_string(), "{}".to_string()));
-                calls.push(ToolCallDisplay { name, arguments, result: t.content.clone() });
+                calls.push(ToolCallDisplay {
+                    name,
+                    arguments,
+                    result: t.content.clone(),
+                });
                 i += 1;
             }
-            items.push(DisplayItem::Tools { group_index: start, calls });
+            items.push(DisplayItem::Tools {
+                group_index: start,
+                calls,
+            });
             continue;
         }
 
-        if (m.role == "user" || m.role == "assistant") && m.content.as_deref().is_some_and(|c| !c.is_empty()) {
+        if (m.role == "user" || m.role == "assistant")
+            && m.content.as_deref().is_some_and(|c| !c.is_empty())
+        {
             items.push(DisplayItem::Message {
                 role: m.role.clone(),
                 content: m.content.clone().unwrap_or_default(),
@@ -183,7 +203,11 @@ fn tool_call_group(
     cx: &mut Context<CrittoUtil>,
 ) -> impl IntoElement {
     let expanded = agent.expanded_tool_calls.contains(&group_index);
-    let names = calls.iter().map(|c| c.name.as_str()).collect::<Vec<_>>().join(", ");
+    let names = calls
+        .iter()
+        .map(|c| c.name.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
 
     let mut container = div()
         .flex()
@@ -205,7 +229,14 @@ fn tool_call_group(
                 .hover(|this| this.text_color(cx.theme().foreground))
                 .child(Icon::new(IconName::Settings2).xsmall())
                 .child(div().flex_1().truncate().child(names))
-                .child(Icon::new(if expanded { IconName::ChevronDown } else { IconName::ChevronRight }).xsmall())
+                .child(
+                    Icon::new(if expanded {
+                        IconName::ChevronDown
+                    } else {
+                        IconName::ChevronRight
+                    })
+                    .xsmall(),
+                )
                 .on_click(cx.listener(move |this, _, _window, cx| {
                     this.toggle_tool_group(group_index, cx);
                 })),
@@ -219,7 +250,12 @@ fn tool_call_group(
                     .flex()
                     .flex_col()
                     .gap_1()
-                    .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child(call.name.clone()))
+                    .child(
+                        div()
+                            .text_xs()
+                            .font_weight(gpui::FontWeight::BOLD)
+                            .child(call.name.clone()),
+                    )
                     .child(
                         div()
                             .text_xs()

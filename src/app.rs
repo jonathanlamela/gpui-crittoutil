@@ -5,7 +5,7 @@ use gpui::{
 use gpui_component::ActiveTheme as _;
 use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
-use gpui_component::input::InputState;
+use gpui_component::input::{InputState, TextareaState};
 
 use crate::agent::{self, ChatMessage};
 use crate::converter::ConvType;
@@ -104,7 +104,11 @@ pub struct FileHasherState {
 pub struct AgentState {
     pub open: bool,
     pub messages: Vec<ChatMessage>,
-    pub input: Entity<InputState>,
+    /// A fixed 3-row textarea, not a plain `Input` — long requests to the
+    /// agent (and the placeholder itself) wrap instead of being clipped to a
+    /// single line. Plain Enter submits (`submit_on_enter`); Shift+Enter
+    /// inserts a newline.
+    pub input: Entity<TextareaState>,
     pub is_running: bool,
     /// Indices into `messages` of assistant turns whose tool-call group is
     /// currently expanded in the chat panel (collapsed by default).
@@ -140,11 +144,16 @@ pub struct CrittoUtil {
 impl CrittoUtil {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let agent_input = cx.new(|cx| {
-            InputState::new(window, cx)
-                .placeholder("Ask the agent to generate a key, encrypt, or decrypt…")
+            TextareaState::new(window, cx)
+                .placeholder("Ask the agent to generate a key,\nencrypt, decrypt, or convert a value…")
+                .rows(3)
+                .submit_on_enter(true)
         });
         cx.subscribe_in(&agent_input, window, |this, _input, event, window, cx| {
-            if let gpui_component::input::InputEvent::PressEnter { .. } = event {
+            // `submit_on_enter` already keeps Shift+Enter as a newline, but it
+            // still emits `PressEnter { shift: true }` right after inserting
+            // it — only a plain Enter should actually send.
+            if let gpui_component::input::InputEvent::PressEnter { shift: false, .. } = event {
                 this.send_agent_message(window, cx);
             }
         })
