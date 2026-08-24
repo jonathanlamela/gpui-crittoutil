@@ -44,15 +44,13 @@ pub fn render(
             .h_full()
             .flex_shrink_0()
             .header(
-                SidebarHeader::new()
-                    .child(div().size(px(10.0)).rounded_full().bg(cx.theme().primary))
-                    .child(
-                        div()
-                            .text_base()
-                            .font_weight(gpui::FontWeight::BOLD)
-                            .text_color(cx.theme().foreground)
-                            .child("CrittoUtil"),
-                    ),
+                SidebarHeader::new().child(
+                    div()
+                        .text_base()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .text_color(cx.theme().foreground)
+                        .child("CrittoUtil"),
+                ),
             )
             .child(menu),
         cx,
