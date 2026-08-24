@@ -5,6 +5,15 @@ and [gpui-component](https://github.com/longbridge/gpui-component) — the same 
 the [Zed](https://zed.dev) editor. It's a functional port of `tauri-crittoutil` (Tauri + Vue): same
 features, same validation rules, but native Rust UI instead of a webview.
 
+<p align="center">
+  <img src="screenshots/02-home.png" width="49%" />
+  <img src="screenshots/01-converter.png" width="49%" />
+</p>
+<p align="center">
+  <img src="screenshots/03-encrypter.png" width="49%" />
+  <img src="screenshots/04-keygen.png" width="49%" />
+</p>
+
 ## Features
 
 Six screens, navigated from the left sidebar:
