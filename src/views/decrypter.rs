@@ -5,7 +5,7 @@ use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
 use crate::crypto_meta::{self, DECRYPT_ALGORITHMS};
-use crate::views::field_with_picker;
+use crate::views::{field_with_picker, radio_row};
 
 pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
     let d = &app.decrypter;
@@ -80,7 +80,6 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("decrypter-decrypt-btn")
                 .label("Decrypt")
                 .primary()
-                .w_full()
                 .on_click(cx.listener(|this, _, _window, cx| do_decrypt(this, cx))),
         )
         .child(if !d.error_msg.is_empty() {
@@ -154,24 +153,14 @@ fn do_decrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
 }
 
 fn alg_row(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
-    div()
-        .flex()
-        .flex_col()
-        .gap_1()
-        .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Algorithm"))
-        .child(div().flex().gap_2().flex_wrap().children(DECRYPT_ALGORITHMS.iter().enumerate().map(|(i, alg)| {
-            let selected = app.decrypter.alg_idx == i;
-            let id: gpui::ElementId = format!("decrypter-alg-{i}").into();
-            let btn = Button::new(id).label(alg.name);
-            let btn = if selected { btn.primary() } else { btn.outline() };
-            btn.on_click(cx.listener(move |this, _, window, cx| {
-                this.decrypter.alg_idx = i;
-                this.decrypter.payload.update(cx, |s, cx| s.set_value("", window, cx));
-                this.decrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
-                this.decrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
-                this.decrypter.result.clear();
-                this.decrypter.error_msg.clear();
-                cx.notify();
-            }))
-        })))
+    let labels = DECRYPT_ALGORITHMS.iter().map(|a| a.name.to_string()).collect();
+    radio_row(app, cx, "Algorithm", "decrypter-alg", labels, Some(app.decrypter.alg_idx), |this, i, window, cx| {
+        this.decrypter.alg_idx = i;
+        this.decrypter.payload.update(cx, |s, cx| s.set_value("", window, cx));
+        this.decrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
+        this.decrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
+        this.decrypter.result.clear();
+        this.decrypter.error_msg.clear();
+        cx.notify();
+    })
 }

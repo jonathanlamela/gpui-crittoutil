@@ -5,7 +5,7 @@ use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
 use crate::crypto_meta::{self, ENCRYPT_ALGORITHMS, EncryptResult};
-use crate::views::field_with_picker;
+use crate::views::{field_with_picker, radio_row};
 
 pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
     let e = &app.encrypter;
@@ -86,7 +86,6 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("encrypter-encrypt-btn")
                 .label("Encrypt")
                 .primary()
-                .w_full()
                 .on_click(cx.listener(|this, _, _window, cx| do_encrypt(this, cx))),
         )
         .child(if !e.error_msg.is_empty() {
@@ -165,26 +164,16 @@ fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
 }
 
 fn alg_row(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
-    div()
-        .flex()
-        .flex_col()
-        .gap_1()
-        .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Algorithm"))
-        .child(div().flex().gap_2().flex_wrap().children(ENCRYPT_ALGORITHMS.iter().enumerate().map(|(i, alg)| {
-            let selected = app.encrypter.alg_idx == i;
-            let id: gpui::ElementId = format!("encrypter-alg-{i}").into();
-            let btn = Button::new(id).label(alg.name);
-            let btn = if selected { btn.primary() } else { btn.outline() };
-            btn.on_click(cx.listener(move |this, _, window, cx| {
-                this.encrypter.alg_idx = i;
-                this.encrypter.plaintext.update(cx, |s, cx| s.set_value("", window, cx));
-                this.encrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
-                this.encrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
-                this.encrypter.result_cipher.clear();
-                this.encrypter.result_iv.clear();
-                this.encrypter.error_msg.clear();
-                cx.notify();
-            }))
-        })))
+    let labels = ENCRYPT_ALGORITHMS.iter().map(|a| a.name.to_string()).collect();
+    radio_row(app, cx, "Algorithm", "encrypter-alg", labels, Some(app.encrypter.alg_idx), |this, i, window, cx| {
+        this.encrypter.alg_idx = i;
+        this.encrypter.plaintext.update(cx, |s, cx| s.set_value("", window, cx));
+        this.encrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
+        this.encrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
+        this.encrypter.result_cipher.clear();
+        this.encrypter.result_iv.clear();
+        this.encrypter.error_msg.clear();
+        cx.notify();
+    })
 }
 

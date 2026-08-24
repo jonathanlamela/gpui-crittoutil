@@ -4,6 +4,7 @@ use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
 use crate::crypto;
+use crate::views::radio_row;
 
 const KEY_SIZES: &[u32] = &[64, 128, 192, 256, 512];
 
@@ -33,28 +34,18 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                         })),
                 ),
         )
-        .child(
-            div()
-                .flex()
-                .flex_col()
-                .gap_1()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Key size"))
-                .child(div().flex().gap_2().flex_wrap().children(KEY_SIZES.iter().map(|&bits| {
-                    let selected = k.key_size == bits;
-                    let id: gpui::ElementId = format!("keygen-size-{bits}").into();
-                    let btn = Button::new(id).label(format!("{bits} bit"));
-                    let btn = if selected { btn.primary() } else { btn.outline() };
-                    btn.on_click(cx.listener(move |this, _, _window, cx| {
-                        this.key_generator.key_size = bits;
-                        cx.notify();
-                    }))
-                }))),
-        )
+        .child({
+            let labels = KEY_SIZES.iter().map(|bits| format!("{bits} bit")).collect();
+            let selected_index = KEY_SIZES.iter().position(|&bits| bits == k.key_size);
+            radio_row(app, cx, "Key size", "keygen-size", labels, selected_index, |this, i, _window, cx| {
+                this.key_generator.key_size = KEY_SIZES[i];
+                cx.notify();
+            })
+        })
         .child(
             Button::new("keygen-generate-btn")
                 .label("Generate key")
                 .primary()
-                .w_full()
                 .on_click(cx.listener(|this, _, _window, cx| {
                     let bits = this.key_generator.key_size;
                     match crypto::generate_key(bits) {

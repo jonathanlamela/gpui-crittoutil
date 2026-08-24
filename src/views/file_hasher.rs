@@ -47,7 +47,6 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("filehasher-pick-btn")
                 .label("Choose a file…")
                 .primary()
-                .w_full()
                 .on_click(cx.listener(|this, _, window, cx| {
                     let _ = this;
                     let paths = cx.prompt_for_paths(PathPromptOptions {

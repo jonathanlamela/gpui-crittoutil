@@ -29,11 +29,12 @@ Six screens, navigated from the left sidebar:
   fields (route enum, per-screen form state, shared `key_history: Vec<KeyEntry>`) — see the
   entity-nesting rule below for why.
 - `src/views/*.rs` — one plain function per screen (`pub fn render(app: &CrittoUtil, window, cx) -> impl IntoElement`),
-  plus `sidebar.rs` for navigation. None of these are `cx.new(...)` entities.
+  plus `sidebar.rs` for navigation (built on gpui-component's standard `sidebar::{Sidebar, SidebarHeader,
+  SidebarMenu, SidebarMenuItem}`, collapse animation disabled). None of these are `cx.new(...)` entities.
 - `src/ui/style.rs` — small shared styling helpers (`surface`, `card`) — opaque theme-derived
   surfaces with a border and soft shadow. A glass/translucent style was tried and explicitly
   rejected in favor of this solid look.
-- `src/theme.rs` + `themes/custom.json` — a custom warm-neutral light/dark theme (teal accent),
+- `src/theme.rs` + `themes/custom.json` — a custom warm-neutral light/dark theme (macOS system blue accent),
   loaded the same way as the sibling `gpui-playground` project's `theme.rs`.
 
 ## House rules (inherited from `gpui-playground/CLAUDE.md` — read that file too)
@@ -63,9 +64,11 @@ Six screens, navigated from the left sidebar:
 
 ## Deliberate simplifications vs. the original Tauri app
 
-- Dropdowns (algorithm/type/key-size pickers) are button groups, not a `Select`/dropdown
-  component — functionally identical (pick one of N), less stateful wiring.
-- Key/IV "pick from history" is an inline row of buttons, not a modal dialog.
+- Algorithm/type/key-size pickers use the standard `radio::{Radio, RadioGroup}` components
+  (via the `views::radio_row` helper) rather than a `Select`/dropdown — a fixed, always-visible
+  set of 2-6 mutually exclusive options reads better as a radio group than a dropdown.
+- Key/IV "pick from history" opens a modal `Dialog` (`ui::key_picker::open_key_picker`), not an
+  inline row of buttons.
 - Copy-to-clipboard has no toast/snackbar confirmation.
 - No i18n — English only.
 

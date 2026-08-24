@@ -12,9 +12,40 @@ use gpui_component::Disableable as _;
 use gpui_component::Sizable as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
+use gpui_component::radio::{Radio, RadioGroup};
 
 use crate::app::CrittoUtil;
 use crate::ui::key_picker::open_key_picker;
+
+/// A labeled horizontal group of mutually-exclusive options, backed by the
+/// library's standard `RadioGroup`/`Radio` components (used for the
+/// algorithm/type/key-size pickers that used to be rows of plain buttons).
+pub fn radio_row(
+    app: &CrittoUtil,
+    cx: &mut Context<CrittoUtil>,
+    label: &str,
+    group_id: &'static str,
+    labels: Vec<String>,
+    selected_index: Option<usize>,
+    on_pick: impl Fn(&mut CrittoUtil, usize, &mut Window, &mut Context<CrittoUtil>) + 'static,
+) -> impl IntoElement {
+    let _ = app;
+    let entity = cx.entity();
+    div()
+        .flex()
+        .flex_col()
+        .gap_1()
+        .child(div().text_xs().text_color(cx.theme().muted_foreground).child(label.to_string()))
+        .child(
+            RadioGroup::horizontal(group_id)
+                .selected_index(selected_index)
+                .children(labels.into_iter().enumerate().map(|(i, l)| Radio::new(format!("{group_id}-{i}")).label(l)))
+                .on_click(move |idx: &usize, window, cx| {
+                    let idx = *idx;
+                    entity.update(cx, |this, cx| on_pick(this, idx, window, cx));
+                }),
+        )
+}
 
 /// A labeled input field with a "pick from key history" button that opens a
 /// dialog listing the shared key history (used for key/IV fields in the
