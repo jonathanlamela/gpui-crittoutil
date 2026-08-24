@@ -31,10 +31,22 @@ Six screens, navigated from the left sidebar:
 - `src/views/*.rs` — one plain function per screen (`pub fn render(app: &CrittoUtil, window, cx) -> impl IntoElement`),
   plus `sidebar.rs` for navigation (built on gpui-component's standard `sidebar::{Sidebar, SidebarHeader,
   SidebarMenu, SidebarMenuItem}`, collapse animation disabled). None of these are `cx.new(...)` entities.
-- `src/ui/style.rs` — small shared styling helpers (`surface`, `card`) — opaque theme-derived
-  surfaces with a border and soft shadow. A glass/translucent style was tried and explicitly
-  rejected in favor of this solid look.
-- `src/theme.rs` + `themes/custom.json` — a custom warm-neutral light/dark theme (macOS system blue accent),
+- Layout is edge-to-edge, Zed-style: `app.rs`'s root row has no outer padding/gap between sidebar
+  and content, and the content panel itself has no background/border of its own — only the
+  sidebar (via the standard `Sidebar` component's own `sidebar.border`/`sidebar.background`
+  tokens) draws a hairline separator. No `src/ui/style.rs` helper exists anymore; per the
+  [gpui-component design guide](https://longbridge.github.io/gpui-component/docs/design-guides),
+  the base window is flat and shadows are reserved for popovers/dialogs/menus, not stacked onto
+  every panel.
+  - Every "secondary" info/output box (converter output, encrypt/decrypt result, generated key,
+    file info, MD5 hash) shares one treatment: `bg(theme.secondary)` + `border_1()` +
+    `border_color(theme.border)` — same-kind surfaces must look identical. The Home screen's
+    feature-card list is a different kind (nav row, not an output box) and is intentionally
+    background-less — border only.
+  - Every screen's root div owns its own `.p_6()` inset and `.overflow_y_scroll()`.
+- `src/theme.rs` + `themes/custom.json` — a custom light/dark theme whose palette is adapted from
+  Zed's built-in "One" theme (`assets/themes/one/one.json` in the Zed repo) — same neutral grays,
+  border tones and accent blue as Zed's editor UI, remapped onto gpui-component's theme schema,
   loaded the same way as the sibling `gpui-playground` project's `theme.rs`.
 
 ## House rules (inherited from `gpui-playground/CLAUDE.md` — read that file too)

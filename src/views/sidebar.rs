@@ -1,12 +1,11 @@
-use gpui::{Context, IntoElement, ParentElement, Styled, Window, div, px};
+use gpui::{Context, IntoElement, ParentElement, Styled, Window, div};
 use gpui_component::ActiveTheme as _;
 use gpui_component::sidebar::{Sidebar, SidebarHeader, SidebarMenu, SidebarMenuItem};
 use gpui_component::{Icon, IconName};
 
 use crate::app::{CrittoUtil, Route};
-use crate::ui::style;
 
-fn route_icon(route: Route) -> IconName {
+pub fn route_icon(route: Route) -> IconName {
     match route {
         Route::Home => IconName::LayoutDashboard,
         Route::Converter => IconName::Replace,
@@ -37,23 +36,19 @@ pub fn render(
             })
     }));
 
-    style::surface(
-        Sidebar::new("sidebar")
-            .collapsible(false)
-            .w(gpui::rems(13.0))
-            .h_full()
-            .flex_shrink_0()
-            .header(
-                SidebarHeader::new().child(
-                    div()
-                        .text_base()
-                        .font_weight(gpui::FontWeight::BOLD)
-                        .text_color(cx.theme().foreground)
-                        .child("CrittoUtil"),
-                ),
-            )
-            .child(menu),
-        cx,
-        px(20.0),
-    )
+    Sidebar::new("sidebar")
+        .collapsible(false)
+        .w(gpui::rems(13.0))
+        .h_full()
+        .flex_shrink_0()
+        .header(
+            SidebarHeader::new().child(
+                div()
+                    .text_base()
+                    .font_weight(gpui::FontWeight::BOLD)
+                    .text_color(cx.theme().foreground)
+                    .child("CrittoUtil"),
+            ),
+        )
+        .child(menu)
 }

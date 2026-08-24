@@ -50,7 +50,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Text to encrypt"))
                 .child(Input::new(&e.plaintext).cleanable(true)),
         )
-        .child(if alg.iv_length.is_some() {
+        .children(alg.iv_length.is_some().then(|| {
             field_with_picker(
                 app,
                 cx,
@@ -62,11 +62,8 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                     this.encrypter.iv.update(cx, |s, cx| s.set_value(name, window, cx));
                 },
             )
-            .into_any_element()
-        } else {
-            div().into_any_element()
-        })
-        .child(if alg.require_key {
+        }))
+        .children(alg.require_key.then(|| {
             field_with_picker(
                 app,
                 cx,
@@ -78,10 +75,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                     this.encrypter.key.update(cx, |s, cx| s.set_value(name, window, cx));
                 },
             )
-            .into_any_element()
-        } else {
-            div().into_any_element()
-        })
+        }))
         .child(
             Button::new("encrypter-encrypt-btn")
                 .label("Encrypt")
@@ -89,33 +83,27 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .self_start()
                 .on_click(cx.listener(|this, _, _window, cx| do_encrypt(this, cx))),
         )
-        .child(if !e.error_msg.is_empty() {
+        .children((!e.error_msg.is_empty()).then(|| {
             div()
                 .p_3()
-                .rounded(cx.theme().radius_lg)
                 .bg(cx.theme().danger.opacity(0.12))
                 .text_color(cx.theme().danger)
                 .text_sm()
                 .child(e.error_msg.clone())
-                .into_any_element()
-        } else {
-            div().into_any_element()
-        })
-        .child(if !e.result_cipher.is_empty() {
+        }))
+        .children((!e.result_cipher.is_empty()).then(|| {
             div()
                 .flex()
                 .flex_col()
                 .gap_2()
                 .p_3()
-                .rounded(cx.theme().radius_lg)
                 .bg(cx.theme().secondary)
+                .border_1()
+                .border_color(cx.theme().border)
                 .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("Ciphertext (Base64)"))
                 .child(div().text_sm().child(e.result_cipher.clone()))
                 .child(super::key_generator::copy_button("encrypter-copy-cipher", e.result_cipher.clone()))
-                .into_any_element()
-        } else {
-            div().into_any_element()
-        })
+        }))
 }
 
 fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {

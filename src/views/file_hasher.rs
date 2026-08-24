@@ -1,4 +1,4 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, PathPromptOptions, Styled, Window, div};
+use gpui::{Context, InteractiveElement, IntoElement, ParentElement, PathPromptOptions, StatefulInteractiveElement as _, Styled, Window, div};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 
@@ -25,6 +25,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
         .gap_4()
         .p_6()
         .size_full()
+        .overflow_y_scroll()
         .child(
             div()
                 .flex()
@@ -85,33 +86,29 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                     .detach();
                 })),
         )
-        .child(if !f.filename.is_empty() {
+        .children((!f.filename.is_empty()).then(|| {
             div()
                 .flex()
                 .flex_col()
                 .gap_1()
                 .p_3()
-                .rounded(cx.theme().radius_lg)
                 .bg(cx.theme().secondary)
+                .border_1()
+                .border_color(cx.theme().border)
                 .child(div().text_sm().font_weight(gpui::FontWeight::BOLD).child(f.filename.clone()))
                 .child(div().text_xs().text_color(cx.theme().muted_foreground).child(format_size(f.filesize)))
-                .into_any_element()
-        } else {
-            div().into_any_element()
-        })
-        .child(if !f.hash.is_empty() {
+        }))
+        .children((!f.hash.is_empty()).then(|| {
             div()
                 .flex()
                 .flex_col()
                 .gap_2()
                 .p_3()
-                .rounded(cx.theme().radius_lg)
                 .bg(cx.theme().secondary)
+                .border_1()
+                .border_color(cx.theme().border)
                 .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("MD5 hash"))
                 .child(div().text_sm().child(f.hash.clone()))
                 .child(super::key_generator::copy_button("filehasher-copy-btn", f.hash.clone()))
-                .into_any_element()
-        } else {
-            div().into_any_element()
-        })
+        }))
 }

@@ -2,9 +2,11 @@ use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInte
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
+use gpui_component::Icon;
 
 use crate::app::{CrittoUtil, Route};
 use crate::home_search;
+use crate::views::sidebar::route_icon;
 
 const FEATURES: &[(Route, &str)] = &[
     (Route::Converter, "Convert text between plain text, binary, and Base64."),
@@ -25,6 +27,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
         .gap_4()
         .p_6()
         .size_full()
+        .overflow_y_scroll()
         .child(
             div()
                 .text_lg()
@@ -32,24 +35,28 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .child("CrittoUtil"),
         )
         .child(Input::new(&app.home_search).cleanable(true))
-        .child(match suggestion {
-            Some(route) => div()
-                .flex()
-                .items_center()
-                .gap_2()
-                .child("Did you mean:")
-                .child(
-                    Button::new("home-search-suggestion")
-                        .label(route.label())
-                        .primary()
-                        .on_click(cx.listener(move |this, _, _window, cx| this.navigate(route, cx))),
-                )
-                .into_any_element(),
-            None if !query.trim().is_empty() => div()
-                .text_color(cx.theme().muted_foreground)
-                .child("No matching feature found.")
-                .into_any_element(),
-            None => div().into_any_element(),
+        .children(match suggestion {
+            Some(route) => Some(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap_2()
+                    .child("Did you mean:")
+                    .child(
+                        Button::new("home-search-suggestion")
+                            .label(route.label())
+                            .primary()
+                            .on_click(cx.listener(move |this, _, _window, cx| this.navigate(route, cx))),
+                    )
+                    .into_any_element(),
+            ),
+            None if !query.trim().is_empty() => Some(
+                div()
+                    .text_color(cx.theme().muted_foreground)
+                    .child("No matching feature found.")
+                    .into_any_element(),
+            ),
+            None => None,
         })
         .child({
             let mut cards = Vec::new();
@@ -67,10 +74,8 @@ fn feature_card(route: Route, description: &'static str, cx: &mut Context<Critto
         .items_center()
         .gap_3()
         .p_4()
-        .rounded(cx.theme().radius_lg)
-        .bg(cx.theme().secondary)
-        .border_1()
-        .border_color(cx.theme().border)
+        .hover(|this| this.bg(cx.theme().secondary))
+        .child(Icon::new(route_icon(route)).text_color(cx.theme().muted_foreground))
         .child(
             div()
                 .flex_1()
@@ -79,12 +84,6 @@ fn feature_card(route: Route, description: &'static str, cx: &mut Context<Critto
                 .gap_1()
                 .child(div().text_sm().font_weight(gpui::FontWeight::BOLD).child(route.label()))
                 .child(div().text_xs().text_color(cx.theme().muted_foreground).child(description)),
-        )
-        .child(
-            Button::new(gpui::ElementId::from(format!("home-card-open-{:?}", route)))
-                .label("Open")
-                .ghost()
-                .on_click(cx.listener(move |this, _, _window, cx| this.navigate(route, cx))),
         )
         .on_click(cx.listener(move |this, _, _window, cx| this.navigate(route, cx)))
 }

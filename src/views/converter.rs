@@ -1,4 +1,4 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, Styled, Window, div};
+use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -20,6 +20,8 @@ pub fn render(
         .flex_col()
         .gap_4()
         .p_6()
+        .size_full()
+        .overflow_y_scroll()
         .child(
             div()
                 .flex()
@@ -46,7 +48,7 @@ pub fn render(
                 ),
         )
         .child(Input::new(&c.input).cleanable(true))
-        .child(err_text(&c.input_error, cx))
+        .children(err_text(&c.input_error, cx))
         .child(type_row(
             app,
             "Convert from",
@@ -108,14 +110,15 @@ pub fn render(
                     cx.notify();
                 })),
         )
-        .child(if !c.output.is_empty() {
+        .children((!c.output.is_empty()).then(|| {
             div()
                 .flex()
                 .flex_col()
                 .gap_2()
                 .p_3()
-                .rounded(cx.theme().radius_lg)
                 .bg(cx.theme().secondary)
+                .border_1()
+                .border_color(cx.theme().border)
                 .child(
                     div()
                         .text_xs()
@@ -137,22 +140,16 @@ pub fn render(
                             }
                         }),
                 )
-                .into_any_element()
-        } else {
-            div().into_any_element()
-        })
+        }))
 }
 
-fn err_text(msg: &str, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
-    if msg.is_empty() {
-        div().into_any_element()
-    } else {
+fn err_text(msg: &str, cx: &mut Context<CrittoUtil>) -> Option<impl IntoElement> {
+    (!msg.is_empty()).then(|| {
         div()
             .text_xs()
             .text_color(cx.theme().danger)
             .child(msg.to_string())
-            .into_any_element()
-    }
+    })
 }
 
 fn type_row(

@@ -4,7 +4,6 @@ use gpui_component::input::InputState;
 
 use crate::converter::ConvType;
 use crate::crypto_meta::{AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
-use crate::ui::style;
 use crate::views;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -188,23 +187,17 @@ impl Render for CrittoUtil {
                 div()
                     .flex()
                     .flex_row()
-                    .gap_3()
-                    .p_3()
                     .size_full()
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)
                     .child(views::sidebar::render(self, window, cx))
                     .child(
-                        style::card(
-                            div()
-                                .id("crittoutil-content")
-                                .flex_1()
-                                .h_full()
-                                .p_5()
-                                .overflow_hidden(),
-                            cx,
-                        )
-                        .child(match self.route {
+                        div()
+                            .id("crittoutil-content")
+                            .flex_1()
+                            .h_full()
+                            .overflow_hidden()
+                            .child(match self.route {
                                 Route::Home => views::home::render(self, window, cx).into_any_element(),
                                 Route::Converter => views::converter::render(self, window, cx).into_any_element(),
                                 Route::KeyGenerator => views::key_generator::render(self, window, cx).into_any_element(),
