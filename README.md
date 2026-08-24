@@ -16,7 +16,14 @@ features, same validation rules, but native Rust UI instead of a webview.
 
 ## Features
 
-Six screens, navigated from the left sidebar:
+### Sessions
+
+The app opens on a session picker: start a **new session** or resume one from the **recent
+sessions** list. A session is just its key/IV history — persisted to disk
+(`~/Library/Application Support/gpui-crittoutil/sessions.json`) so it survives restarts. "All
+sessions" at the bottom of the sidebar returns to the picker.
+
+### Six screens, navigated from the left sidebar
 
 - **Home** — free-text search that scores against per-feature keywords and jumps you to the
   right screen.
@@ -29,8 +36,16 @@ Six screens, navigated from the left sidebar:
   as the original app (byte-length checks, Base64-vs-plain-text IV heuristics).
 - **File Hasher** — pick a file with the native file dialog and compute its MD5 hash.
 
-Any key or IV you've generated or used is remembered in a shared history, pickable from a dialog
-on the relevant fields.
+Any key or IV you've generated or used is remembered in the session's shared history, pickable
+from a dialog on the relevant fields.
+
+### Agentic mode
+
+Click the bot icon in the sidebar header to open a chat panel that talks to a **local LM Studio**
+server (`http://localhost:1234/v1` by default — no data leaves your machine). The agent can call
+the app's own `generate_key`, `encrypt`, and `decrypt` tools on your behalf, e.g. "generate a
+256-bit key and use it to AES-encrypt this text". Any key/IV it uses is added to the session's
+history like anything you'd generate by hand.
 
 ## Getting started
 
@@ -56,6 +71,12 @@ Tests cover `crypto.rs` (encryption/hashing/key generation, including edge cases
 length and wrong-key decryption failure), `converter.rs`, and `home_search.rs` — they're a
 regression suite for functional parity with the original Tauri app.
 
+### Agentic mode setup
+
+1. Install [LM Studio](https://lmstudio.ai/), download any small/fast local model, and start its
+   local server (default `http://localhost:1234`).
+2. Open the app, click the bot icon in the sidebar, and start chatting.
+
 ## Tech stack
 
 - [gpui](https://github.com/zed-industries/zed) — the GPU-accelerated UI framework behind Zed
@@ -63,6 +84,8 @@ regression suite for functional parity with the original Tauri app.
   top of gpui (buttons, inputs, dialogs, sidebar, theming, …)
 - `aes`, `des`, `cbc`, `ecb`, `cipher` — block cipher primitives
 - `md5`, `base64`, `rand` — hashing, encoding, and key generation
+- `serde`/`serde_json`, `dirs` — session persistence
+- `ureq` — the local LM Studio HTTP client for agentic mode
 
 ## Project structure
 
