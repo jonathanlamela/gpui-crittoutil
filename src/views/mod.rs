@@ -6,16 +6,56 @@ pub mod encrypter;
 pub mod decrypter;
 pub mod file_hasher;
 
-use gpui::{Context, IntoElement, ParentElement, SharedString, Styled, Window, div};
+use gpui::{Context, Corners, IntoElement, ParentElement, SharedString, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;
 use gpui_component::Disableable as _;
+use gpui_component::IconName;
 use gpui_component::Sizable as _;
+use gpui_component::StyledExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 use gpui_component::radio::{Radio, RadioGroup};
 
 use crate::app::CrittoUtil;
 use crate::ui::key_picker::open_key_picker;
+
+/// A labeled result tile with a copy-to-clipboard icon button next to the
+/// value — the shared "secondary output" treatment (rounded, `theme.secondary`
+/// background, no border) used across Converter/Encrypter/Decrypter/Key
+/// Generator/File Hasher for whatever the screen just produced.
+pub fn result_tile(
+    cx: &mut Context<CrittoUtil>,
+    title: &str,
+    value: String,
+    copy_id: impl Into<SharedString>,
+) -> impl IntoElement {
+    div()
+        .flex()
+        .flex_col()
+        .gap_2()
+        .p_3()
+        .bg(cx.theme().secondary)
+        .corner_radii(Corners::all(px(10.0)))
+        .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child(title.to_string()))
+        .child(
+            div()
+                .flex()
+                .items_center()
+                .justify_between()
+                .gap_2()
+                .child(div().text_sm().child(value.clone()))
+                .child(
+                    Button::new(copy_id.into())
+                        .icon(IconName::Copy)
+                        .tooltip("Copy")
+                        .ghost()
+                        .xsmall()
+                        .on_click(move |_, _window, cx| {
+                            cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
+                        }),
+                ),
+        )
+}
 
 /// A labeled horizontal group of mutually-exclusive options, backed by the
 /// library's standard `RadioGroup`/`Radio` components (used for the

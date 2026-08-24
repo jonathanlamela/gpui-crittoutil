@@ -1,4 +1,4 @@
-use gpui::{App, Entity, ParentElement, SharedString, Styled, Window, div};
+use gpui::{App, Entity, ParentElement, SharedString, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;
 use gpui_component::WindowExt as _;
 use gpui_component::button::{Button, ButtonVariants as _};
@@ -20,7 +20,7 @@ pub fn open_key_picker(
         let entity = entity.clone();
         let keys = keys.clone();
         let on_pick = on_pick.clone();
-        dialog.title(title).content(move |content, _window, cx| {
+        dialog.title(title).w(px(480.0)).content(move |content, _window, cx| {
             if keys.is_empty() {
                 return content.child(
                     div()

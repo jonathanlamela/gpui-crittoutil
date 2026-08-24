@@ -60,6 +60,10 @@ pub struct ConverterState {
 pub struct KeyGeneratorState {
     pub key_size: u32,
     pub generated_key: String,
+    /// The bit size the currently-displayed `generated_key` was actually
+    /// generated at — independent of `key_size`, which tracks the radio
+    /// selection and can change afterwards without regenerating the key.
+    pub generated_bits: u32,
 }
 
 pub struct EncrypterState {
@@ -125,6 +129,7 @@ impl CrittoUtil {
             key_generator: KeyGeneratorState {
                 key_size: 256,
                 generated_key: String::new(),
+                generated_bits: 0,
             },
             encrypter: EncrypterState {
                 alg_idx: 0,

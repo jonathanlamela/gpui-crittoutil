@@ -102,7 +102,7 @@ pub fn render(
                 .label("Encrypt")
                 .primary()
                 .self_start()
-                .on_click(cx.listener(|this, _, _window, cx| do_encrypt(this, cx))),
+                .on_click(cx.listener(|this, _, window, cx| do_encrypt(this, window, cx))),
         )
         .children((!e.error_msg.is_empty()).then(|| {
             div()
@@ -142,7 +142,7 @@ pub fn render(
         }))
 }
 
-fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
+fn do_encrypt(this: &mut CrittoUtil, window: &mut Window, cx: &mut Context<CrittoUtil>) {
     let alg = *this.encrypt_alg();
     let plaintext = this.encrypter.plaintext.read(cx).value().to_string();
     let key = this.encrypter.key.read(cx).value().to_string();
@@ -183,6 +183,11 @@ fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
         }) => {
             this.encrypter.result_cipher = cipher;
             this.encrypter.result_iv = used_iv.clone();
+            // Show the caller which IV was actually used, including when it
+            // was auto-generated because the field was left empty.
+            this.encrypter
+                .iv
+                .update(cx, |s, cx| s.set_value(used_iv.clone(), window, cx));
             this.add_key_history(used_iv.clone(), used_iv.len());
         }
         Err(e) => {

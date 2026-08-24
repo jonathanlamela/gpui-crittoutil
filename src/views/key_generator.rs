@@ -1,15 +1,16 @@
 use gpui::{
-    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
-    Styled, Window, div,
+    Context, Corners, InteractiveElement, IntoElement, ParentElement,
+    StatefulInteractiveElement as _, Styled, Window, div, px,
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::IconName;
 use gpui_component::Sizable as _;
+use gpui_component::StyledExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
 use crate::crypto;
-use crate::views::radio_row;
+use crate::views::{radio_row, result_tile};
 
 const KEY_SIZES: &[u32] = &[64, 128, 192, 256, 512];
 
@@ -75,6 +76,7 @@ pub fn render(
                     match crypto::generate_key(bits) {
                         Ok(key) => {
                             this.key_generator.generated_key = key.clone();
+                            this.key_generator.generated_bits = bits;
                             this.add_key_history(key, (bits / 8) as usize);
                         }
                         Err(e) => {
@@ -85,33 +87,12 @@ pub fn render(
                 })),
         )
         .children((!k.generated_key.is_empty()).then(|| {
-            div()
-                .flex()
-                .flex_col()
-                .gap_2()
-                .p_3()
-                .bg(cx.theme().secondary)
-                .border_1()
-                .border_color(cx.theme().border)
-                .child(
-                    div()
-                        .text_xs()
-                        .font_weight(gpui::FontWeight::BOLD)
-                        .child("Generated key"),
-                )
-                .child(
-                    div()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .gap_2()
-                        .child(
-                            div()
-                                .text_sm()
-                                .child(format!("{} ({} bit)", k.generated_key, k.key_size)),
-                        )
-                        .child(copy_button("keygen-copy-btn", k.generated_key.clone())),
-                )
+            result_tile(
+                cx,
+                "Generated key",
+                format!("{} ({} bit)", k.generated_key, k.generated_bits),
+                "keygen-copy-btn",
+            )
         }))
         .children(key_history_list(app, cx))
 }
@@ -149,8 +130,9 @@ pub fn key_history_list(
                     .items_center()
                     .justify_between()
                     .gap_2()
-                    .p_2()
+                    .p_3()
                     .bg(cx.theme().secondary)
+                    .corner_radii(Corners::all(px(10.0)))
                     .child(
                         div()
                             .flex()

@@ -2,17 +2,13 @@ use gpui::{
     Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
     Styled, Window, div,
 };
-use gpui::{Corners, px};
 use gpui_component::ActiveTheme as _;
-use gpui_component::IconName;
-use gpui_component::Sizable as _;
-use gpui_component::StyledExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
 use crate::converter::{self, ConvType};
-use crate::views::radio_row;
+use crate::views::{radio_row, result_tile};
 
 pub fn render(
     app: &CrittoUtil,
@@ -118,42 +114,7 @@ pub fn render(
                 })),
         )
         .children((!c.output.is_empty()).then(|| {
-            div()
-                .flex()
-                .flex_col()
-                .gap_2()
-                .p_3()
-                .bg(cx.theme().secondary)
-                .corner_radii(Corners::all(px(10.0)))
-                .child(
-                    div()
-                        .text_xs()
-                        .font_weight(gpui::FontWeight::BOLD)
-                        .child("Output"),
-                )
-                .child(
-                    div()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .gap_2()
-                        .child(div().text_sm().child(c.output.clone()))
-                        .child(
-                            Button::new("converter-copy-btn")
-                                .icon(IconName::Copy)
-                                .tooltip("Copy")
-                                .ghost()
-                                .xsmall()
-                                .on_click({
-                                    let value = c.output.clone();
-                                    move |_, _window, cx| {
-                                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(
-                                            value.clone(),
-                                        ));
-                                    }
-                                }),
-                        ),
-                )
+            result_tile(cx, "Output", c.output.clone(), "converter-copy-btn")
         }))
 }
 
