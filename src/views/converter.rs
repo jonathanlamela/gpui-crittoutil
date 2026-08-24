@@ -20,7 +20,6 @@ pub fn render(
         .flex_col()
         .gap_4()
         .p_6()
-        .size_full()
         .child(
             div()
                 .flex()
@@ -48,20 +47,31 @@ pub fn render(
         )
         .child(Input::new(&c.input).cleanable(true))
         .child(err_text(&c.input_error, cx))
-        .child(type_row(app, "Convert from", "converter-from", ConvType::ALL.to_vec(), c.from_type, cx, |this, t, _window, cx| {
-            this.converter.from_type = t;
-            if this.converter.to_type == t {
-                this.converter.to_type = t.first_other();
-            }
-            this.converter.output.clear();
-            this.converter.input_error.clear();
-            cx.notify();
-        }))
+        .child(type_row(
+            app,
+            "Convert from",
+            "converter-from",
+            ConvType::ALL.to_vec(),
+            c.from_type,
+            cx,
+            |this, t, _window, cx| {
+                this.converter.from_type = t;
+                if this.converter.to_type == t {
+                    this.converter.to_type = t.first_other();
+                }
+                this.converter.output.clear();
+                this.converter.input_error.clear();
+                cx.notify();
+            },
+        ))
         .child(type_row(
             app,
             "Convert to",
             "converter-to",
-            ConvType::ALL.into_iter().filter(|t| *t != c.from_type).collect(),
+            ConvType::ALL
+                .into_iter()
+                .filter(|t| *t != c.from_type)
+                .collect(),
             c.to_type,
             cx,
             |this, t, _window, cx| {
@@ -74,6 +84,7 @@ pub fn render(
             Button::new("converter-convert-btn")
                 .label("Convert")
                 .primary()
+                .self_start()
                 .on_click(cx.listener(|this, _, _window, cx| {
                     let input = this.converter.input.read(cx).value().to_string();
                     let from = this.converter.from_type;
@@ -116,6 +127,7 @@ pub fn render(
                     Button::new("converter-copy-btn")
                         .label("Copy")
                         .ghost()
+                        .self_start()
                         .on_click({
                             let value = c.output.clone();
                             move |_, _window, cx| {
@@ -154,7 +166,15 @@ fn type_row(
 ) -> impl IntoElement {
     let selected_index = options.iter().position(|t| *t == current);
     let labels = options.iter().map(|t| t.label().to_string()).collect();
-    radio_row(app, cx, label, group_id, labels, selected_index, move |this, idx, window, cx| {
-        on_pick(this, options[idx], window, cx);
-    })
+    radio_row(
+        app,
+        cx,
+        label,
+        group_id,
+        labels,
+        selected_index,
+        move |this, idx, window, cx| {
+            on_pick(this, options[idx], window, cx);
+        },
+    )
 }

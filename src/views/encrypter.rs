@@ -86,6 +86,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("encrypter-encrypt-btn")
                 .label("Encrypt")
                 .primary()
+                .self_start()
                 .on_click(cx.listener(|this, _, _window, cx| do_encrypt(this, cx))),
         )
         .child(if !e.error_msg.is_empty() {

@@ -80,6 +80,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("decrypter-decrypt-btn")
                 .label("Decrypt")
                 .primary()
+                .self_start()
                 .on_click(cx.listener(|this, _, _window, cx| do_decrypt(this, cx))),
         )
         .child(if !d.error_msg.is_empty() {

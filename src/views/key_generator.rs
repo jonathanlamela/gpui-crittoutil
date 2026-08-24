@@ -46,6 +46,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             Button::new("keygen-generate-btn")
                 .label("Generate key")
                 .primary()
+                .self_start()
                 .on_click(cx.listener(|this, _, _window, cx| {
                     let bits = this.key_generator.key_size;
                     match crypto::generate_key(bits) {
@@ -79,7 +80,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
 }
 
 pub fn copy_button(id: &'static str, value: String) -> impl IntoElement {
-    Button::new(id).label("Copy").ghost().on_click(move |_, _window, cx| {
+    Button::new(id).label("Copy").ghost().self_start().on_click(move |_, _window, cx| {
         cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
     })
 }
