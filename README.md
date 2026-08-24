@@ -43,8 +43,9 @@ from a dialog on the relevant fields.
 
 Click the bot icon in the sidebar header to open a chat panel that talks to a **local LM Studio**
 server (`http://localhost:1234/v1` by default — no data leaves your machine). The agent can call
-the app's own `generate_key`, `encrypt`, and `decrypt` tools on your behalf, e.g. "generate a
-256-bit key and use it to AES-encrypt this text". Any key/IV it uses is added to the session's
+the app's own `generate_key`, `encrypt`, `decrypt`, and `convert` tools on your behalf, e.g.
+"generate a 256-bit key and use it to AES-encrypt this text" or "convert this to Base64". Any
+key/IV it uses is added to the session's
 history like anything you'd generate by hand.
 
 ## Getting started

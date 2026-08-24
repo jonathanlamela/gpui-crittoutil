@@ -2,8 +2,7 @@ use gpui::{
     BoxShadow, Context, ElementId, InteractiveElement, IntoElement, ParentElement,
     StatefulInteractiveElement as _, Styled, Window, div, point, prelude::FluentBuilder as _, px,
 };
-use gpui_component::button::{Button, ButtonVariants as _};
-use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _};
+use gpui_component::{ActiveTheme as _, Icon, IconName};
 
 use crate::app::{CrittoUtil, Route};
 
@@ -78,35 +77,13 @@ pub fn render(
                         .rounded(radius)
                         .bg(cx.theme().sidebar)
                         .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .justify_between()
-                                .gap_2()
-                                .p_3()
-                                .child(
-                                    div()
-                                        .text_base()
-                                        .font_weight(gpui::FontWeight::BOLD)
-                                        .text_color(cx.theme().sidebar_foreground)
-                                        .child("CrittoUtil"),
-                                )
-                                .child(
-                                    Button::new("toggle-agent-mode")
-                                        .icon(
-                                            Icon::new(IconName::Bot).text_color(if app.agent.open {
-                                                cx.theme().primary_foreground
-                                            } else {
-                                                cx.theme().sidebar_foreground
-                                            }),
-                                        )
-                                        .tooltip("Agent")
-                                        .small()
-                                        .map(|btn| if app.agent.open { btn.primary() } else { btn.outline() })
-                                        .on_click(cx.listener(|this, _, _window, cx| {
-                                            this.toggle_agent(cx);
-                                        })),
-                                ),
+                            div().flex().items_center().gap_2().p_3().child(
+                                div()
+                                    .text_base()
+                                    .font_weight(gpui::FontWeight::BOLD)
+                                    .text_color(cx.theme().sidebar_foreground)
+                                    .child("CrittoUtil"),
+                            ),
                         )
                         .child({
                             let mut items = Vec::new();

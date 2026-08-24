@@ -14,9 +14,24 @@ transient UI state and aren't part of what a session restores. "All sessions" at
 the sidebar returns to the picker (saving the current session first).
 
 A small bot icon in the sidebar header toggles **agentic mode**: a chat panel (right side of the
-window) talking to a local LM Studio server (`http://localhost:1234/v1` by default) that can call
-this app's own `generate_key`/`encrypt`/`decrypt` as tools (see `src/agent.rs`). No dedicated top
-bar — the toggle lives in the sidebar header to avoid adding a permanent strip above the layout.
+window) talking to a local LM Studio server, always `agent::DEFAULT_BASE_URL`
+(`http://localhost:1234/v1`) — no endpoint/model picker in the UI; the model id is auto-detected
+via `GET /models` on every turn. The agent can call this app's own `generate_key`/`encrypt`/
+`decrypt`/`convert` as tools (see `src/agent.rs`). No dedicated top bar — the toggle lives in the
+sidebar header to avoid adding a permanent strip above the layout. The conversation lives on the
+always-alive `CrittoUtil` entity (`AgentState::messages`), so it survives closing and reopening
+the panel and only resets when the app restarts.
+
+Because many local models loaded in LM Studio don't reliably emit real OpenAI-style `tool_calls`,
+`agent::run_turn` mirrors the sibling `tauri-crittoutil-shadcn` app's proven fallback: if a model
+narrates a call as a JSON blob in plain text instead, `extract_pseudo_tool_call` finds and
+executes it for real (validating the name against `TOOL_NAMES` and accepting the `name`/`tool`/
+`function` and `arguments`/`parameters`/`args` aliases models commonly use); if it just writes a
+bare mention like `encrypt("hello")` with no arguments, `looks_like_bare_tool_call` detects that
+and re-prompts the model instead of giving up. The chat panel's tool-call dropdown (collapsed by
+default, click to expand name/arguments/result) only renders for genuine `tool_calls`, same as
+the Tauri version — the text-fallback path is intentionally invisible plumbing, not something
+worth surfacing as its own UI block.
 
 Inside a session, six screens, navigated from the left sidebar:
 - **Home** — free-text search that scores against per-feature keywords and suggests a screen.

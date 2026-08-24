@@ -3,6 +3,8 @@ use gpui::{
     Styled, Window, div, prelude::FluentBuilder as _,
 };
 use gpui_component::ActiveTheme as _;
+use gpui_component::IconName;
+use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::InputState;
 
 use crate::agent::{self, ChatMessage};
@@ -94,14 +96,19 @@ pub struct FileHasherState {
 }
 
 /// State for agentic mode: a chat with a local LM Studio model that can call
-/// the app's own crypto tools (generate/encrypt/decrypt) on the user's behalf.
+/// the app's own crypto tools (generate/encrypt/decrypt/convert) on the
+/// user's behalf. Always talks to `agent::DEFAULT_BASE_URL`, auto-detecting
+/// whichever model LM Studio has loaded — no endpoint/model picker in the UI.
+/// The conversation lives on this always-alive entity, so it survives
+/// closing and reopening the panel; it only resets when the app restarts.
 pub struct AgentState {
     pub open: bool,
-    pub base_url: String,
-    pub model: String,
     pub messages: Vec<ChatMessage>,
     pub input: Entity<InputState>,
     pub is_running: bool,
+    /// Indices into `messages` of assistant turns whose tool-call group is
+    /// currently expanded in the chat panel (collapsed by default).
+    pub expanded_tool_calls: std::collections::HashSet<usize>,
 }
 
 /// The single top-level entity for the whole app. Per this project's house style
@@ -132,6 +139,17 @@ pub struct CrittoUtil {
 
 impl CrittoUtil {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let agent_input = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Ask the agent to generate a key, encrypt, or decrypt…")
+        });
+        cx.subscribe_in(&agent_input, window, |this, _input, event, window, cx| {
+            if let gpui_component::input::InputEvent::PressEnter { .. } = event {
+                this.send_agent_message(window, cx);
+            }
+        })
+        .detach();
+
         Self {
             route: Route::Home,
             key_history: Vec::new(),
@@ -179,13 +197,10 @@ impl CrittoUtil {
             },
             agent: AgentState {
                 open: false,
-                base_url: agent::DEFAULT_BASE_URL.to_string(),
-                model: String::new(),
                 messages: Vec::new(),
-                input: cx.new(|cx| {
-                    InputState::new(window, cx).placeholder("Ask the agent to generate a key, encrypt, or decrypt…")
-                }),
+                input: agent_input,
                 is_running: false,
+                expanded_tool_calls: std::collections::HashSet::new(),
             },
         }
     }
@@ -278,9 +293,18 @@ impl CrittoUtil {
             .update(cx, |s, cx| s.set_value("", window, cx));
         if self.agent.messages.is_empty() {
             self.agent.messages.push(ChatMessage::system(
-                "You are a helpful assistant embedded in a crypto utility app. Use the \
-                 generate_key, encrypt, and decrypt tools to carry out the user's requests \
-                 instead of doing the math yourself.",
+                "You are a helpful assistant embedded in a crypto utility app. Always reply in \
+                 English, regardless of what language the user writes in. You cannot generate \
+                 random keys, encrypt, decrypt, or convert between text/binary/Base64 by \
+                 yourself — you have no access to randomness, cipher implementations, or \
+                 encoding logic. When the user asks for a concrete action (encrypt/decrypt \
+                 something, generate a key, convert/encode/decode a value), you MUST call the \
+                 appropriate tool (generate_key, encrypt, decrypt, or convert) in that same turn \
+                 using the function/tool-calling mechanism the API gives you. Never write a \
+                 tool name as plain text, e.g. `encrypt(\"hello\")` or a JSON blob describing the \
+                 call — that does nothing at all, it is not a real call, and never invent, \
+                 guess, or compute a key/ciphertext/plaintext/encoded value yourself. A tool's \
+                 result is already the final answer — report the exact value it returned.",
             ));
         }
         self.agent.messages.push(ChatMessage::user(text));
@@ -288,14 +312,16 @@ impl CrittoUtil {
         cx.notify();
 
         let mut history = self.agent.messages.clone();
-        let base_url = self.agent.base_url.clone();
-        let model = self.agent.model.clone();
 
         cx.spawn(async move |entity, cx| {
             let (history, new_keys) = cx
                 .background_executor()
                 .spawn(async move {
-                    let new_keys = agent::run_turn(&base_url, &model, &mut history);
+                    let base_url = agent::DEFAULT_BASE_URL;
+                    // Always ask LM Studio which model it actually has loaded
+                    // rather than requiring the user to type it in.
+                    let model = agent::fetch_first_model_id(base_url).unwrap_or_else(|| "local-model".to_string());
+                    let new_keys = agent::run_turn(base_url, &model, &mut history);
                     (history, new_keys)
                 })
                 .await;
@@ -312,6 +338,15 @@ impl CrittoUtil {
                 .ok();
         })
         .detach();
+    }
+
+    /// Expand/collapse a tool-call group in the agent chat panel — indexed by
+    /// the position of the assistant message that starts it.
+    pub fn toggle_tool_group(&mut self, index: usize, cx: &mut Context<Self>) {
+        if !self.agent.expanded_tool_calls.remove(&index) {
+            self.agent.expanded_tool_calls.insert(index);
+        }
+        cx.notify();
     }
 
     pub fn encrypt_alg(&self) -> &'static crate::crypto_meta::AlgMeta {
@@ -355,35 +390,68 @@ impl Render for CrittoUtil {
                             .child(
                                 div()
                                     .id("crittoutil-content")
+                                    .flex()
+                                    .flex_col()
                                     .flex_1()
                                     .h_full()
                                     .overflow_hidden()
                                     .mt_4()
-                                    .child(match self.route {
-                                        Route::Home => {
-                                            views::home::render(self, window, cx).into_any_element()
-                                        }
-                                        Route::Converter => {
-                                            views::converter::render(self, window, cx)
-                                                .into_any_element()
-                                        }
-                                        Route::KeyGenerator => {
-                                            views::key_generator::render(self, window, cx)
-                                                .into_any_element()
-                                        }
-                                        Route::Encrypter => {
-                                            views::encrypter::render(self, window, cx)
-                                                .into_any_element()
-                                        }
-                                        Route::Decrypter => {
-                                            views::decrypter::render(self, window, cx)
-                                                .into_any_element()
-                                        }
-                                        Route::FileHasher => {
-                                            views::file_hasher::render(self, window, cx)
-                                                .into_any_element()
-                                        }
-                                    }),
+                                    // Fixed container, common to every screen — currently just
+                                    // the agent toggle, but any chrome that should appear above
+                                    // every section (not just some) belongs here, not repeated
+                                    // per-view.
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .justify_end()
+                                            // Matches each screen's own `.p_6()` inset below, so
+                                            // this button's right edge lines up with theirs.
+                                            .px_6()
+                                            .pt_3()
+                                            .child(
+                                                Button::new("toggle-agent-mode")
+                                                    .icon(IconName::Bot)
+                                                    .label("Agent")
+                                                    .map(|btn| {
+                                                        if self.agent.open { btn.primary() } else { btn.info() }
+                                                    })
+                                                    .on_click(cx.listener(|this, _, _window, cx| {
+                                                        this.toggle_agent(cx);
+                                                    })),
+                                            ),
+                                    )
+                                    // The section-specific container for whichever screen is active.
+                                    .child(
+                                        div()
+                                            .flex_1()
+                                            .min_h_0()
+                                            .overflow_hidden()
+                                            .child(match self.route {
+                                                Route::Home => {
+                                                    views::home::render(self, window, cx).into_any_element()
+                                                }
+                                                Route::Converter => {
+                                                    views::converter::render(self, window, cx)
+                                                        .into_any_element()
+                                                }
+                                                Route::KeyGenerator => {
+                                                    views::key_generator::render(self, window, cx)
+                                                        .into_any_element()
+                                                }
+                                                Route::Encrypter => {
+                                                    views::encrypter::render(self, window, cx)
+                                                        .into_any_element()
+                                                }
+                                                Route::Decrypter => {
+                                                    views::decrypter::render(self, window, cx)
+                                                        .into_any_element()
+                                                }
+                                                Route::FileHasher => {
+                                                    views::file_hasher::render(self, window, cx)
+                                                        .into_any_element()
+                                                }
+                                            }),
+                                    ),
                             )
                             .when(self.agent.open, |row| {
                                 row.child(views::agent_panel::render(self, window, cx))
