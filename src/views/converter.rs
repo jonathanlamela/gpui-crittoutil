@@ -1,5 +1,12 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
+    Styled, Window, div,
+};
+use gpui::{Corners, px};
 use gpui_component::ActiveTheme as _;
+use gpui_component::IconName;
+use gpui_component::Sizable as _;
+use gpui_component::StyledExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 
@@ -36,7 +43,7 @@ pub fn render(
                 .child(
                     Button::new("converter-clear-btn")
                         .label("Clear")
-                        .ghost()
+                        .outline()
                         .on_click(cx.listener(|this, _, window, cx| {
                             this.converter
                                 .input
@@ -117,28 +124,35 @@ pub fn render(
                 .gap_2()
                 .p_3()
                 .bg(cx.theme().secondary)
-                .border_1()
-                .border_color(cx.theme().border)
+                .corner_radii(Corners::all(px(10.0)))
                 .child(
                     div()
                         .text_xs()
                         .font_weight(gpui::FontWeight::BOLD)
                         .child("Output"),
                 )
-                .child(div().text_sm().child(c.output.clone()))
                 .child(
-                    Button::new("converter-copy-btn")
-                        .label("Copy")
-                        .ghost()
-                        .self_start()
-                        .on_click({
-                            let value = c.output.clone();
-                            move |_, _window, cx| {
-                                cx.write_to_clipboard(gpui::ClipboardItem::new_string(
-                                    value.clone(),
-                                ));
-                            }
-                        }),
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_between()
+                        .gap_2()
+                        .child(div().text_sm().child(c.output.clone()))
+                        .child(
+                            Button::new("converter-copy-btn")
+                                .icon(IconName::Copy)
+                                .tooltip("Copy")
+                                .ghost()
+                                .xsmall()
+                                .on_click({
+                                    let value = c.output.clone();
+                                    move |_, _window, cx| {
+                                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(
+                                            value.clone(),
+                                        ));
+                                    }
+                                }),
+                        ),
                 )
         }))
 }

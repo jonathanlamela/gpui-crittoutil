@@ -1,5 +1,10 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
+    Styled, Window, div,
+};
 use gpui_component::ActiveTheme as _;
+use gpui_component::IconName;
+use gpui_component::Sizable as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
@@ -8,7 +13,11 @@ use crate::views::radio_row;
 
 const KEY_SIZES: &[u32] = &[64, 128, 192, 256, 512];
 
-pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
+pub fn render(
+    app: &CrittoUtil,
+    _window: &mut Window,
+    cx: &mut Context<CrittoUtil>,
+) -> impl IntoElement {
     let k = &app.key_generator;
 
     div()
@@ -24,11 +33,16 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .items_center()
                 .justify_between()
-                .child(div().text_lg().font_weight(gpui::FontWeight::BOLD).child("Key generator"))
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Key generator"),
+                )
                 .child(
                     Button::new("keygen-clear-btn")
                         .label("Clear")
-                        .ghost()
+                        .outline()
                         .on_click(cx.listener(|this, _, _window, cx| {
                             this.key_generator.generated_key.clear();
                             cx.notify();
@@ -38,10 +52,18 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
         .child({
             let labels = KEY_SIZES.iter().map(|bits| format!("{bits} bit")).collect();
             let selected_index = KEY_SIZES.iter().position(|&bits| bits == k.key_size);
-            radio_row(app, cx, "Key size", "keygen-size", labels, selected_index, |this, i, _window, cx| {
-                this.key_generator.key_size = KEY_SIZES[i];
-                cx.notify();
-            })
+            radio_row(
+                app,
+                cx,
+                "Key size",
+                "keygen-size",
+                labels,
+                selected_index,
+                |this, i, _window, cx| {
+                    this.key_generator.key_size = KEY_SIZES[i];
+                    cx.notify();
+                },
+            )
         })
         .child(
             Button::new("keygen-generate-btn")
@@ -71,26 +93,55 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .bg(cx.theme().secondary)
                 .border_1()
                 .border_color(cx.theme().border)
-                .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("Generated key"))
-                .child(div().text_sm().child(format!("{} ({} bit)", k.generated_key, k.key_size)))
-                .child(copy_button("keygen-copy-btn", k.generated_key.clone()))
+                .child(
+                    div()
+                        .text_xs()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Generated key"),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_between()
+                        .gap_2()
+                        .child(
+                            div()
+                                .text_sm()
+                                .child(format!("{} ({} bit)", k.generated_key, k.key_size)),
+                        )
+                        .child(copy_button("keygen-copy-btn", k.generated_key.clone())),
+                )
         }))
         .children(key_history_list(app, cx))
 }
 
 pub fn copy_button(id: &'static str, value: String) -> impl IntoElement {
-    Button::new(id).label("Copy").ghost().self_start().on_click(move |_, _window, cx| {
-        cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
-    })
+    Button::new(id)
+        .icon(IconName::Copy)
+        .tooltip("Copy")
+        .ghost()
+        .xsmall()
+        .on_click(move |_, _window, cx| {
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
+        })
 }
 
-pub fn key_history_list(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> Option<impl IntoElement> {
+pub fn key_history_list(
+    app: &CrittoUtil,
+    cx: &mut Context<CrittoUtil>,
+) -> Option<impl IntoElement> {
     (!app.key_history.is_empty()).then(|| {
         div()
             .flex()
             .flex_col()
             .gap_2()
-            .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("History"))
+            .child(
+                div()
+                    .text_xs()
+                    .font_weight(gpui::FontWeight::BOLD)
+                    .child("History"),
+            )
             .children(app.key_history.iter().enumerate().map(|(i, entry)| {
                 let value = entry.name.clone();
                 div()
@@ -105,7 +156,12 @@ pub fn key_history_list(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> Optio
                             .flex()
                             .flex_col()
                             .child(div().text_sm().child(entry.name.clone()))
-                            .child(div().text_xs().text_color(cx.theme().muted_foreground).child(format!("{} bit", entry.bits))),
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(format!("{} bit", entry.bits)),
+                            ),
                     )
                     .child(copy_button_dyn(format!("keygen-hist-copy-{i}"), value))
             }))
@@ -113,7 +169,12 @@ pub fn key_history_list(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> Optio
 }
 
 fn copy_button_dyn(id: String, value: String) -> impl IntoElement {
-    Button::new(gpui::ElementId::from(id)).label("Copy").ghost().on_click(move |_, _window, cx| {
-        cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
-    })
+    Button::new(gpui::ElementId::from(id))
+        .icon(IconName::Copy)
+        .tooltip("Copy")
+        .ghost()
+        .xsmall()
+        .on_click(move |_, _window, cx| {
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(value.clone()));
+        })
 }

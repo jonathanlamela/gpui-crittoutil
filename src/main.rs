@@ -29,7 +29,7 @@ fn main() {
 
             win_options.titlebar = Some(TitlebarOptions {
                 title: Some(SharedString::from("CrittoUtil")),
-                appears_transparent: false,
+                appears_transparent: true,
                 traffic_light_position: None,
             });
 

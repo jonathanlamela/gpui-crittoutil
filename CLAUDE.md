@@ -29,15 +29,22 @@ Six screens, navigated from the left sidebar:
   fields (route enum, per-screen form state, shared `key_history: Vec<KeyEntry>`) — see the
   entity-nesting rule below for why.
 - `src/views/*.rs` — one plain function per screen (`pub fn render(app: &CrittoUtil, window, cx) -> impl IntoElement`),
-  plus `sidebar.rs` for navigation (built on gpui-component's standard `sidebar::{Sidebar, SidebarHeader,
-  SidebarMenu, SidebarMenuItem}`, collapse animation disabled). None of these are `cx.new(...)` entities.
-- Layout is edge-to-edge, Zed-style: `app.rs`'s root row has no outer padding/gap between sidebar
-  and content, and the content panel itself has no background/border of its own — only the
-  sidebar (via the standard `Sidebar` component's own `sidebar.border`/`sidebar.background`
-  tokens) draws a hairline separator. No `src/ui/style.rs` helper exists anymore; per the
+  plus `sidebar.rs` for navigation. None of these are `cx.new(...)` entities.
+- `src/views/sidebar.rs` is a hand-rolled nav rail, not gpui-component's `sidebar::{Sidebar,
+  SidebarMenu, SidebarMenuItem}` — those components bake in behavior (a hover highlight on
+  `SidebarHeader`, `overflow: hidden` on the panel that also clips its own box-shadow) that
+  fought the floating-card look this app wants, so plain `div()`s give full control instead. It's
+  a macOS-app-sidebar style card: inset via `.m_4()`, rounded via `.rounded(px(10.0))`, a
+  `.shadow_lg()` painted on an *unclipped outer wrapper* (the inner panel needs its own
+  `overflow_hidden` to clip content to its rounded corners, which would clip a shadow painted on
+  that same element — hence the two nested divs), background from the `sidebar.background` theme
+  token. Active/hover nav-row state uses `sidebar_accent`/`sidebar_accent_foreground` (active,
+  solid) and `muted` (hover) theme tokens — no raw colors.
+- The content panel (`app.rs`) has no background/border of its own — it just shows the window
+  background behind the sidebar card. No `src/ui/style.rs` helper exists anymore; per the
   [gpui-component design guide](https://longbridge.github.io/gpui-component/docs/design-guides),
-  the base window is flat and shadows are reserved for popovers/dialogs/menus, not stacked onto
-  every panel.
+  shadows are reserved for elevated/floating elements, not stacked onto every panel — here that's
+  the sidebar card, not the flat content area.
   - Every "secondary" info/output box (converter output, encrypt/decrypt result, generated key,
     file info, MD5 hash) shares one treatment: `bg(theme.secondary)` + `border_1()` +
     `border_color(theme.border)` — same-kind surfaces must look identical. The Home screen's

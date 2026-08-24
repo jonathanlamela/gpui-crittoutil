@@ -1,4 +1,7 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, PathPromptOptions, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, PathPromptOptions,
+    StatefulInteractiveElement as _, Styled, Window, div,
+};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 
@@ -15,7 +18,11 @@ fn format_size(bytes: u64) -> String {
     }
 }
 
-pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
+pub fn render(
+    app: &CrittoUtil,
+    _window: &mut Window,
+    cx: &mut Context<CrittoUtil>,
+) -> impl IntoElement {
     let f = &app.file_hasher;
 
     div()
@@ -31,11 +38,16 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .items_center()
                 .justify_between()
-                .child(div().text_lg().font_weight(gpui::FontWeight::BOLD).child("File hasher"))
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("File hasher"),
+                )
                 .child(
                     Button::new("filehasher-clear-btn")
                         .label("Clear")
-                        .ghost()
+                        .outline()
                         .on_click(cx.listener(|this, _, _window, cx| {
                             this.file_hasher.filename.clear();
                             this.file_hasher.filesize = 0;
@@ -75,7 +87,8 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                                         Err(e) => {
                                             this.file_hasher.filename = String::new();
                                             this.file_hasher.filesize = 0;
-                                            this.file_hasher.hash = format!("Error reading file: {e}");
+                                            this.file_hasher.hash =
+                                                format!("Error reading file: {e}");
                                         }
                                     }
                                     cx.notify();
@@ -95,8 +108,18 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .bg(cx.theme().secondary)
                 .border_1()
                 .border_color(cx.theme().border)
-                .child(div().text_sm().font_weight(gpui::FontWeight::BOLD).child(f.filename.clone()))
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child(format_size(f.filesize)))
+                .child(
+                    div()
+                        .text_sm()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child(f.filename.clone()),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(format_size(f.filesize)),
+                )
         }))
         .children((!f.hash.is_empty()).then(|| {
             div()
@@ -107,8 +130,23 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .bg(cx.theme().secondary)
                 .border_1()
                 .border_color(cx.theme().border)
-                .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("MD5 hash"))
-                .child(div().text_sm().child(f.hash.clone()))
-                .child(super::key_generator::copy_button("filehasher-copy-btn", f.hash.clone()))
+                .child(
+                    div()
+                        .text_xs()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("MD5 hash"),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_between()
+                        .gap_2()
+                        .child(div().text_sm().child(f.hash.clone()))
+                        .child(super::key_generator::copy_button(
+                            "filehasher-copy-btn",
+                            f.hash.clone(),
+                        )),
+                )
         }))
 }

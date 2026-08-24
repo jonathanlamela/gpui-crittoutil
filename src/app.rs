@@ -1,4 +1,7 @@
-use gpui::{AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window, div};
+use gpui::{
+    AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
+    Styled, Window, div,
+};
 use gpui_component::ActiveTheme as _;
 use gpui_component::input::InputState;
 
@@ -108,11 +111,12 @@ impl CrittoUtil {
         Self {
             route: Route::Home,
             key_history: Vec::new(),
-            home_search: cx.new(|cx| {
-                InputState::new(window, cx).placeholder("What do you want to do?")
-            }),
+            home_search: cx
+                .new(|cx| InputState::new(window, cx).placeholder("What do you want to do?")),
             converter: ConverterState {
-                input: cx.new(|cx| InputState::new(window, cx).placeholder("Enter a value to convert...")),
+                input: cx.new(|cx| {
+                    InputState::new(window, cx).placeholder("Enter a value to convert...")
+                }),
                 from_type: ConvType::Text,
                 to_type: ConvType::Base64,
                 output: String::new(),
@@ -126,7 +130,9 @@ impl CrittoUtil {
                 alg_idx: 0,
                 plaintext: cx.new(|cx| InputState::new(window, cx).placeholder("Text to encrypt")),
                 key: cx.new(|cx| InputState::new(window, cx).placeholder("Encryption key")),
-                iv: cx.new(|cx| InputState::new(window, cx).placeholder("IV (leave empty to auto-generate)")),
+                iv: cx.new(|cx| {
+                    InputState::new(window, cx).placeholder("IV (leave empty to auto-generate)")
+                }),
                 result_cipher: String::new(),
                 result_iv: String::new(),
                 error_msg: String::new(),
@@ -153,7 +159,13 @@ impl CrittoUtil {
         if name.is_empty() || self.key_history.iter().any(|k| k.name == name) {
             return;
         }
-        self.key_history.insert(0, KeyEntry { name, bits: length_bytes * 8 });
+        self.key_history.insert(
+            0,
+            KeyEntry {
+                name,
+                bits: length_bytes * 8,
+            },
+        );
     }
 
     pub fn navigate(&mut self, route: Route, cx: &mut Context<Self>) {
@@ -197,13 +209,27 @@ impl Render for CrittoUtil {
                             .flex_1()
                             .h_full()
                             .overflow_hidden()
+                            .mt_4()
                             .child(match self.route {
-                                Route::Home => views::home::render(self, window, cx).into_any_element(),
-                                Route::Converter => views::converter::render(self, window, cx).into_any_element(),
-                                Route::KeyGenerator => views::key_generator::render(self, window, cx).into_any_element(),
-                                Route::Encrypter => views::encrypter::render(self, window, cx).into_any_element(),
-                                Route::Decrypter => views::decrypter::render(self, window, cx).into_any_element(),
-                                Route::FileHasher => views::file_hasher::render(self, window, cx).into_any_element(),
+                                Route::Home => {
+                                    views::home::render(self, window, cx).into_any_element()
+                                }
+                                Route::Converter => {
+                                    views::converter::render(self, window, cx).into_any_element()
+                                }
+                                Route::KeyGenerator => {
+                                    views::key_generator::render(self, window, cx)
+                                        .into_any_element()
+                                }
+                                Route::Encrypter => {
+                                    views::encrypter::render(self, window, cx).into_any_element()
+                                }
+                                Route::Decrypter => {
+                                    views::decrypter::render(self, window, cx).into_any_element()
+                                }
+                                Route::FileHasher => {
+                                    views::file_hasher::render(self, window, cx).into_any_element()
+                                }
                             }),
                     ),
             )

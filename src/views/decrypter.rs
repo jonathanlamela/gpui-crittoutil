@@ -1,4 +1,7 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
+    Styled, Window, div,
+};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -7,7 +10,11 @@ use crate::app::CrittoUtil;
 use crate::crypto_meta::{self, DECRYPT_ALGORITHMS};
 use crate::views::{field_with_picker, radio_row};
 
-pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
+pub fn render(
+    app: &CrittoUtil,
+    _window: &mut Window,
+    cx: &mut Context<CrittoUtil>,
+) -> impl IntoElement {
     let d = &app.decrypter;
     let alg = app.decrypt_alg();
 
@@ -24,11 +31,16 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .items_center()
                 .justify_between()
-                .child(div().text_lg().font_weight(gpui::FontWeight::BOLD).child("Decrypter"))
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Decrypter"),
+                )
                 .child(
                     Button::new("decrypter-clear-btn")
                         .label("Clear")
-                        .ghost()
+                        .outline()
                         .on_click(cx.listener(|this, _, window, cx| {
                             let d = &this.decrypter;
                             d.payload.update(cx, |s, cx| s.set_value("", window, cx));
@@ -46,7 +58,12 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .flex_col()
                 .gap_1()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Base64 payload to decrypt"))
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Base64 payload to decrypt"),
+                )
                 .child(Input::new(&d.payload).cleanable(true)),
         )
         .children(alg.iv_length.is_some().then(|| {
@@ -58,7 +75,9 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 "decrypter-pick-iv",
                 "Pick IV",
                 |this, name, window, cx| {
-                    this.decrypter.iv.update(cx, |s, cx| s.set_value(name, window, cx));
+                    this.decrypter
+                        .iv
+                        .update(cx, |s, cx| s.set_value(name, window, cx));
                 },
             )
         }))
@@ -70,7 +89,9 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
             "decrypter-pick-key",
             "Pick key",
             |this, name, window, cx| {
-                this.decrypter.key.update(cx, |s, cx| s.set_value(name, window, cx));
+                this.decrypter
+                    .key
+                    .update(cx, |s, cx| s.set_value(name, window, cx));
             },
         ))
         .child(
@@ -97,9 +118,24 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .bg(cx.theme().secondary)
                 .border_1()
                 .border_color(cx.theme().border)
-                .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("Decrypted text"))
-                .child(div().text_sm().child(d.result.clone()))
-                .child(super::key_generator::copy_button("decrypter-copy-result", d.result.clone()))
+                .child(
+                    div()
+                        .text_xs()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Decrypted text"),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_between()
+                        .gap_2()
+                        .child(div().text_sm().child(d.result.clone()))
+                        .child(super::key_generator::copy_button(
+                            "decrypter-copy-result",
+                            d.result.clone(),
+                        )),
+                )
         }))
 }
 
@@ -128,7 +164,11 @@ fn do_decrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
     this.decrypter.error_msg.clear();
     this.decrypter.result.clear();
 
-    let iv_opt = if iv.trim().is_empty() { None } else { Some(iv.trim()) };
+    let iv_opt = if iv.trim().is_empty() {
+        None
+    } else {
+        Some(iv.trim())
+    };
     match crypto_meta::decrypt(&alg, payload.trim(), &key, iv_opt) {
         Ok(result) => {
             this.decrypter.result = result;
@@ -145,14 +185,31 @@ fn do_decrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
 }
 
 fn alg_row(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
-    let labels = DECRYPT_ALGORITHMS.iter().map(|a| a.name.to_string()).collect();
-    radio_row(app, cx, "Algorithm", "decrypter-alg", labels, Some(app.decrypter.alg_idx), |this, i, window, cx| {
-        this.decrypter.alg_idx = i;
-        this.decrypter.payload.update(cx, |s, cx| s.set_value("", window, cx));
-        this.decrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
-        this.decrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
-        this.decrypter.result.clear();
-        this.decrypter.error_msg.clear();
-        cx.notify();
-    })
+    let labels = DECRYPT_ALGORITHMS
+        .iter()
+        .map(|a| a.name.to_string())
+        .collect();
+    radio_row(
+        app,
+        cx,
+        "Algorithm",
+        "decrypter-alg",
+        labels,
+        Some(app.decrypter.alg_idx),
+        |this, i, window, cx| {
+            this.decrypter.alg_idx = i;
+            this.decrypter
+                .payload
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.decrypter
+                .key
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.decrypter
+                .iv
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.decrypter.result.clear();
+            this.decrypter.error_msg.clear();
+            cx.notify();
+        },
+    )
 }

@@ -1,4 +1,7 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
+    Styled, Window, div,
+};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -7,7 +10,11 @@ use crate::app::CrittoUtil;
 use crate::crypto_meta::{self, ENCRYPT_ALGORITHMS, EncryptResult};
 use crate::views::{field_with_picker, radio_row};
 
-pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
+pub fn render(
+    app: &CrittoUtil,
+    _window: &mut Window,
+    cx: &mut Context<CrittoUtil>,
+) -> impl IntoElement {
     let e = &app.encrypter;
     let alg = app.encrypt_alg();
 
@@ -24,11 +31,16 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .items_center()
                 .justify_between()
-                .child(div().text_lg().font_weight(gpui::FontWeight::BOLD).child("Encrypter"))
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Encrypter"),
+                )
                 .child(
                     Button::new("encrypter-clear-btn")
                         .label("Clear")
-                        .ghost()
+                        .outline()
                         .on_click(cx.listener(|this, _, window, cx| {
                             let e = &this.encrypter;
                             e.plaintext.update(cx, |s, cx| s.set_value("", window, cx));
@@ -47,7 +59,12 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .flex()
                 .flex_col()
                 .gap_1()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child("Text to encrypt"))
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Text to encrypt"),
+                )
                 .child(Input::new(&e.plaintext).cleanable(true)),
         )
         .children(alg.iv_length.is_some().then(|| {
@@ -59,7 +76,9 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 "encrypter-pick-iv",
                 "Pick IV",
                 |this, name, window, cx| {
-                    this.encrypter.iv.update(cx, |s, cx| s.set_value(name, window, cx));
+                    this.encrypter
+                        .iv
+                        .update(cx, |s, cx| s.set_value(name, window, cx));
                 },
             )
         }))
@@ -72,7 +91,9 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 "encrypter-pick-key",
                 "Pick key",
                 |this, name, window, cx| {
-                    this.encrypter.key.update(cx, |s, cx| s.set_value(name, window, cx));
+                    this.encrypter
+                        .key
+                        .update(cx, |s, cx| s.set_value(name, window, cx));
                 },
             )
         }))
@@ -100,9 +121,24 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                 .bg(cx.theme().secondary)
                 .border_1()
                 .border_color(cx.theme().border)
-                .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child("Ciphertext (Base64)"))
-                .child(div().text_sm().child(e.result_cipher.clone()))
-                .child(super::key_generator::copy_button("encrypter-copy-cipher", e.result_cipher.clone()))
+                .child(
+                    div()
+                        .text_xs()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Ciphertext (Base64)"),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_between()
+                        .gap_2()
+                        .child(div().text_sm().child(e.result_cipher.clone()))
+                        .child(super::key_generator::copy_button(
+                            "encrypter-copy-cipher",
+                            e.result_cipher.clone(),
+                        )),
+                )
         }))
 }
 
@@ -132,12 +168,19 @@ fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
     this.encrypter.result_cipher.clear();
     this.encrypter.result_iv.clear();
 
-    let iv_opt = if iv.is_empty() { None } else { Some(iv.as_str()) };
+    let iv_opt = if iv.is_empty() {
+        None
+    } else {
+        Some(iv.as_str())
+    };
     match crypto_meta::encrypt(&alg, &plaintext, &key, iv_opt) {
         Ok(EncryptResult::Plain(cipher)) => {
             this.encrypter.result_cipher = cipher;
         }
-        Ok(EncryptResult::Cbc { cipher, iv: used_iv }) => {
+        Ok(EncryptResult::Cbc {
+            cipher,
+            iv: used_iv,
+        }) => {
             this.encrypter.result_cipher = cipher;
             this.encrypter.result_iv = used_iv.clone();
             this.add_key_history(used_iv.clone(), used_iv.len());
@@ -153,16 +196,32 @@ fn do_encrypt(this: &mut CrittoUtil, cx: &mut Context<CrittoUtil>) {
 }
 
 fn alg_row(app: &CrittoUtil, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
-    let labels = ENCRYPT_ALGORITHMS.iter().map(|a| a.name.to_string()).collect();
-    radio_row(app, cx, "Algorithm", "encrypter-alg", labels, Some(app.encrypter.alg_idx), |this, i, window, cx| {
-        this.encrypter.alg_idx = i;
-        this.encrypter.plaintext.update(cx, |s, cx| s.set_value("", window, cx));
-        this.encrypter.key.update(cx, |s, cx| s.set_value("", window, cx));
-        this.encrypter.iv.update(cx, |s, cx| s.set_value("", window, cx));
-        this.encrypter.result_cipher.clear();
-        this.encrypter.result_iv.clear();
-        this.encrypter.error_msg.clear();
-        cx.notify();
-    })
+    let labels = ENCRYPT_ALGORITHMS
+        .iter()
+        .map(|a| a.name.to_string())
+        .collect();
+    radio_row(
+        app,
+        cx,
+        "Algorithm",
+        "encrypter-alg",
+        labels,
+        Some(app.encrypter.alg_idx),
+        |this, i, window, cx| {
+            this.encrypter.alg_idx = i;
+            this.encrypter
+                .plaintext
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.encrypter
+                .key
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.encrypter
+                .iv
+                .update(cx, |s, cx| s.set_value("", window, cx));
+            this.encrypter.result_cipher.clear();
+            this.encrypter.result_iv.clear();
+            this.encrypter.error_msg.clear();
+            cx.notify();
+        },
+    )
 }
-
