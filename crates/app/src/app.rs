@@ -84,6 +84,11 @@ pub struct AgentState {
 /// exception — they are gpui-component's own leaf state entities for text editing
 /// and are required for text input to work at all.
 pub struct CrittoUtil {
+    /// Focused on any mouse-down over a non-input area (see `Render` impl) so
+    /// clicking outside a text input blurs it — gpui only moves focus between
+    /// elements that explicitly request it, so without this, focus would only
+    /// ever move from one `Entity<InputState>` to another.
+    pub root_focus_handle: gpui::FocusHandle,
     pub route: Route,
     pub key_history: Vec<KeyEntry>,
 
@@ -122,6 +127,7 @@ impl CrittoUtil {
         .detach();
 
         Self {
+            root_focus_handle: cx.focus_handle(),
             route: Route::Home,
             key_history: Vec::new(),
             sessions: session::load_all(),
@@ -341,7 +347,12 @@ impl Render for CrittoUtil {
 
         div()
             .id("crittoutil-root")
+            .track_focus(&self.root_focus_handle)
             .size_full()
+            .on_mouse_down_out(cx.listener(|this, _, window, cx| {
+                window.focus(&this.root_focus_handle, cx);
+                cx.notify();
+            }))
             .child(if self.active_session_id.is_none() {
                 views::session_picker::render(self, window, cx).into_any_element()
             } else {
