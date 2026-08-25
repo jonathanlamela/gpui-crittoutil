@@ -6,9 +6,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::converter::{self, ConvType};
-use crate::crypto;
-use crate::crypto_meta::{self, AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
+use converter::{self, ConvType};
+use crypto_core::crypto;
+use crypto_core::crypto_meta::{self, AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
 
 pub const DEFAULT_BASE_URL: &str = "http://localhost:1234/v1";
 

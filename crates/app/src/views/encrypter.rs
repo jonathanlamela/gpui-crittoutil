@@ -7,7 +7,7 @@ use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
-use crate::crypto_meta::{self, ENCRYPT_ALGORITHMS, EncryptResult};
+use crypto_core::crypto_meta::{self, ENCRYPT_ALGORITHMS, EncryptResult};
 use crate::views::{field_with_picker, radio_row};
 
 pub fn render(

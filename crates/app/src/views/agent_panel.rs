@@ -10,7 +10,7 @@ use gpui_component::input::Textarea;
 use gpui_component::text::markdown;
 use gpui_component::{Icon, Sizable as _};
 
-use crate::agent::ChatMessage;
+use agent::ChatMessage;
 use crate::app::{AgentState, CrittoUtil};
 
 /// Agentic-mode side panel: a chat with a local LM Studio model that can call

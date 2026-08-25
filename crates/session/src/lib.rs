@@ -4,9 +4,17 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
-use crate::app::KeyEntry;
+/// A single entry in the shared key-history list. Mirrors the Pinia
+/// `keyHistory` store: newest first, no duplicate names. Owned by this crate
+/// (rather than `app`) since it's persisted data shared across every feature
+/// that reads/writes the key history (key generator, encrypter, decrypter).
+#[derive(Debug, Clone)]
+pub struct KeyEntry {
+    pub name: String,
+    pub bits: usize,
+}
 
-/// A key/IV persisted as part of a session's history. Mirrors `app::KeyEntry`
+/// A key/IV persisted as part of a session's history. Mirrors `KeyEntry`
 /// but derives `Serialize`/`Deserialize` on its own — `KeyEntry` itself stays
 /// plain since it's also embedded in view state that has no business knowing
 /// about serialization.

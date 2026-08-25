@@ -1,7 +1,7 @@
 //! Port of `HomeView.vue`'s `FEATURE_KEYWORDS` scoring logic (English keywords only,
 //! since i18n is not ported — the it/en toggle is skipped per spec).
 
-use crate::app::Route;
+use crate::Route;
 
 struct FeatureKeywords {
     route: Route,

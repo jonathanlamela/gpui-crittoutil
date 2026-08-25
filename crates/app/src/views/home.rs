@@ -4,8 +4,8 @@ use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 use gpui_component::Icon;
 
-use crate::app::{CrittoUtil, Route};
-use crate::home_search;
+use crate::app::CrittoUtil;
+use home::Route;
 use crate::views::sidebar::route_icon;
 
 const FEATURES: &[(Route, &str)] = &[
@@ -18,7 +18,7 @@ const FEATURES: &[(Route, &str)] = &[
 
 pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUtil>) -> impl IntoElement {
     let query = app.home_search.read(cx).value().to_string();
-    let suggestion = home_search::search(&query);
+    let suggestion = home::search(&query);
 
     div()
         .id("home-view")

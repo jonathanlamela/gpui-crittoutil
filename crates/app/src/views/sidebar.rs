@@ -4,7 +4,8 @@ use gpui::{
 };
 use gpui_component::{ActiveTheme as _, Icon, IconName};
 
-use crate::app::{CrittoUtil, Route};
+use crate::app::CrittoUtil;
+use home::Route;
 
 pub fn route_icon(route: Route) -> IconName {
     match route {

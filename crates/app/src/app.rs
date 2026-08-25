@@ -7,51 +7,13 @@ use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::{InputState, TextareaState};
 
-use crate::agent::{self, ChatMessage};
-use crate::converter::ConvType;
-use crate::crypto_meta::{AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
-use crate::session::{self, Session, StoredKeyEntry};
+use agent::{self, ChatMessage};
+use converter::ConvType;
+use crypto_core::crypto_meta::{AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
+use session::{self, KeyEntry, Session, StoredKeyEntry};
+use home::Route;
+
 use crate::views;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Route {
-    Home,
-    Converter,
-    KeyGenerator,
-    Encrypter,
-    Decrypter,
-    FileHasher,
-}
-
-impl Route {
-    pub const ALL: [Route; 6] = [
-        Route::Home,
-        Route::Converter,
-        Route::KeyGenerator,
-        Route::Encrypter,
-        Route::Decrypter,
-        Route::FileHasher,
-    ];
-
-    pub fn label(&self) -> &'static str {
-        match self {
-            Route::Home => "Home",
-            Route::Converter => "Converter",
-            Route::KeyGenerator => "Key generator",
-            Route::Encrypter => "Encrypter",
-            Route::Decrypter => "Decrypter",
-            Route::FileHasher => "File hasher",
-        }
-    }
-}
-
-/// A single entry in the shared key-history list. Mirrors the Pinia `keyHistory`
-/// store: newest first, no duplicate names.
-#[derive(Debug, Clone)]
-pub struct KeyEntry {
-    pub name: String,
-    pub bits: usize,
-}
 
 pub struct ConverterState {
     pub input: Entity<InputState>,
@@ -358,11 +320,11 @@ impl CrittoUtil {
         cx.notify();
     }
 
-    pub fn encrypt_alg(&self) -> &'static crate::crypto_meta::AlgMeta {
+    pub fn encrypt_alg(&self) -> &'static crypto_core::crypto_meta::AlgMeta {
         &ENCRYPT_ALGORITHMS[self.encrypter.alg_idx]
     }
 
-    pub fn decrypt_alg(&self) -> &'static crate::crypto_meta::AlgMeta {
+    pub fn decrypt_alg(&self) -> &'static crypto_core::crypto_meta::AlgMeta {
         &DECRYPT_ALGORITHMS[self.decrypter.alg_idx]
     }
 }

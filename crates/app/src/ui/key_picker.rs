@@ -3,7 +3,8 @@ use gpui_component::ActiveTheme as _;
 use gpui_component::WindowExt as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 
-use crate::app::{CrittoUtil, KeyEntry};
+use crate::app::CrittoUtil;
+use session::KeyEntry;
 
 /// Opens a modal dialog listing the shared key history so the user can pick one
 /// entry to fill a key/IV field with, instead of a row of small inline buttons.

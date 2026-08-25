@@ -1,13 +1,11 @@
-[package]
-name = "gpui-crittoutil"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "2"
+members = ["crates/*"]
 
-[dependencies]
+[workspace.dependencies]
 gpui = { git = "https://github.com/zed-industries/zed" }
 gpui_platform = { git = "https://github.com/zed-industries/zed", features = ["font-kit"] }
 gpui-component = { git = "https://github.com/longbridge/gpui-component", rev = "14359a0cdd00657eb68fa946bfd99cd83c26e002" }
-# Optional, for default bundled assets
 gpui-component-assets = { git = "https://github.com/longbridge/gpui-component", rev = "14359a0cdd00657eb68fa946bfd99cd83c26e002" }
 anyhow = "1.0"
 
@@ -23,3 +21,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 dirs = "5"
 ureq = { version = "2", features = ["json"] }
+
+crypto_core = { path = "crates/crypto_core" }
+converter = { path = "crates/converter" }
+home = { path = "crates/home" }
+session = { path = "crates/session" }
+agent = { path = "crates/agent" }

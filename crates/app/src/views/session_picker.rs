@@ -8,7 +8,7 @@ use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
-use crate::session;
+use session;
 
 /// The screen shown when no session is active: a "New session" action and
 /// the list of previously-saved sessions to resume. This is the very first

@@ -1,7 +1,7 @@
 use gpui::App;
 use gpui_component::{Theme, ThemeMode, ThemeRegistry};
 
-const CUSTOM_THEME_FILE: &str = include_str!("../themes/custom.json");
+const CUSTOM_THEME_FILE: &str = include_str!("../../../themes/custom.json");
 
 pub fn init(cx: &mut App) {
     let registry = ThemeRegistry::global_mut(cx);

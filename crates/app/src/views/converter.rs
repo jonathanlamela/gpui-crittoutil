@@ -7,7 +7,7 @@ use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
-use crate::converter::{self, ConvType};
+use converter::{self, ConvType};
 use crate::views::{radio_row, result_tile};
 
 pub fn render(

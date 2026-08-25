@@ -9,7 +9,7 @@ use gpui_component::StyledExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
-use crate::crypto;
+use crypto_core::crypto;
 use crate::views::{radio_row, result_tile};
 
 const KEY_SIZES: &[u32] = &[64, 128, 192, 256, 512];

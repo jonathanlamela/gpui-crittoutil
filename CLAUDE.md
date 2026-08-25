@@ -17,7 +17,7 @@ A small bot icon in the sidebar header toggles **agentic mode**: a chat panel (r
 window) talking to a local LM Studio server, always `agent::DEFAULT_BASE_URL`
 (`http://localhost:1234/v1`) — no endpoint/model picker in the UI; the model id is auto-detected
 via `GET /models` on every turn. The agent can call this app's own `generate_key`/`encrypt`/
-`decrypt`/`convert` as tools (see `src/agent.rs`). No dedicated top bar — the toggle lives in the
+`decrypt`/`convert` as tools (see `crates/agent/src/lib.rs`). No dedicated top bar — the toggle lives in the
 sidebar header to avoid adding a permanent strip above the layout. The conversation lives on the
 always-alive `CrittoUtil` entity (`AgentState::messages`), so it survives closing and reopening
 the panel and only resets when the app restarts.
@@ -43,19 +43,66 @@ Inside a session, six screens, navigated from the left sidebar:
 
 ## Structure
 
-- `src/crypto.rs` — the crypto core, ported ~verbatim from the Tauri app's Rust backend (it was
-  already pure Rust). Keep its `#[cfg(test)]` unit tests intact — they're the functional-parity
-  contract for this module; don't weaken or delete them.
-- `src/crypto_meta.rs` — algorithm metadata (key/IV length requirements) and encrypt/decrypt
-  dispatch, ported from the original app's JS composable.
-- `src/converter.rs` — text/binary/base64 conversion logic + its own unit tests.
-- `src/home_search.rs` — the Home screen's keyword-scoring search, English-only (the original had
-  an it/en toggle; this port skips i18n).
+This is a Cargo **workspace** (`crates/*`), split by feature capability rather than by
+implementation role — with one unavoidable exception forced by gpui's entity model, explained
+below. The root `Cargo.toml` is `[workspace]`-only; all dependency versions/git revisions live
+once in `[workspace.dependencies]` and every crate pulls them in via `dep = { workspace = true }`.
+
+Pure-logic feature crates (no gpui dependency, freely reusable/testable in isolation):
+
+- `crates/crypto_core` (`src/crypto.rs` + `src/crypto_meta.rs`) — the crypto core, ported
+  ~verbatim from the Tauri app's Rust backend (it was already pure Rust), plus algorithm metadata
+  (key/IV length requirements) and encrypt/decrypt dispatch, ported from the original app's JS
+  composable. Keep its `#[cfg(test)]` unit tests intact — they're the functional-parity contract
+  for this module; don't weaken or delete them.
+- `crates/converter` — text/binary/base64 conversion logic + its own unit tests.
+- `crates/home` — the Home screen's keyword-scoring search (`home_search.rs`), English-only (the
+  original had an it/en toggle; this port skips i18n), plus the `Route` enum naming every
+  navigable screen. `Route` lives here rather than in `crates/app` because Home is what actually
+  needs to name every screen to score a search query against it; `crates/app` re-exports it as the
+  single source of truth for navigation.
+- `crates/session` — session persistence (`Session`, `StoredKeyEntry`, `load_all`/`save_all`,
+  `~/Library/Application Support/gpui-crittoutil/sessions.json`), plus `KeyEntry`, the shared
+  key/IV history entry type. `KeyEntry` lives here rather than in `crates/app` since it's data
+  persisted by, and shared across, every feature that reads/writes the key history (key generator,
+  encrypter, decrypter).
+- `crates/agent` — the LM Studio chat/tool-calling logic (`run_turn`, `extract_pseudo_tool_call`,
+  `looks_like_bare_tool_call`, `fetch_first_model_id`, `DEFAULT_BASE_URL`), built on top of
+  `crypto_core` and `converter`. Pure request/response logic — no gpui dependency.
+
+`crates/app` — the gpui-dependent binary crate, composing everything above:
+
+- `src/main.rs` — binary entry point (window setup, `Root` wrapping).
 - `src/app.rs` — the single top-level `CrittoUtil` entity. **All** view state lives here as plain
-  fields (route enum, per-screen form state, shared `key_history: Vec<KeyEntry>`) — see the
-  entity-nesting rule below for why.
+  fields (`Route` re-exported from `home`, per-screen form state, shared
+  `key_history: Vec<session::KeyEntry>`) — see the entity-nesting rule below for why.
+- `src/theme.rs` + `../../themes/custom.json` — a custom light/dark theme whose palette is adapted
+  from Zed's built-in "One" theme (`assets/themes/one/one.json` in the Zed repo) — same neutral
+  grays, border tones and accent blue as Zed's editor UI, remapped onto gpui-component's theme
+  schema, loaded the same way as the sibling `gpui-playground` project's `theme.rs`.
+- `src/ui/key_picker.rs` — the reusable "pick a key/IV from shared history" modal dialog, used by
+  the key generator, encrypter and decrypter screens.
 - `src/views/*.rs` — one plain function per screen (`pub fn render(app: &CrittoUtil, window, cx) -> impl IntoElement`),
-  plus `sidebar.rs` for navigation. None of these are `cx.new(...)` entities.
+  plus `sidebar.rs` for navigation and `mod.rs` for cross-screen helpers (`result_tile`,
+  `radio_row`, `field_with_picker`). None of these are `cx.new(...)` entities.
+
+**Why views/state aren't split into their own feature crates alongside their logic.** The
+"feature crate = state + view + logic together" ideal (as used for the pure-logic crates above)
+runs into a hard wall for anything interactive: every view function needs `&CrittoUtil` and
+`&mut Context<CrittoUtil>` (for `cx.listener`, click handlers, `cx.notify()`, etc.), and gpui's
+`Context<T>`/`Entity<T>` are concrete over `T = CrittoUtil`. Since the whole app is one entity
+(see house rule 1), *any* code that touches `Context<CrittoUtil>` is necessarily coupled to the
+crate that defines `CrittoUtil` — splitting `views/encrypter.rs` into a standalone
+`crates/encrypt_decrypt` would require either making `CrittoUtil` generic (defeats the point of a
+single concrete entity) or that crate depending on `crates/app` while `crates/app` also depends on
+it to render the screen, an unavoidable cycle. So `crates/app` owns `CrittoUtil` itself, every
+per-screen state struct embedded in it (`ConverterState`, `KeyGeneratorState`, `EncrypterState`,
+`DecrypterState`, `FileHasherState`, `AgentState`), and every `views/*.rs` render function,
+organized into one file per feature to preserve feature-oriented organization as far as gpui's
+model allows. What *did* move out cleanly are the feature crates' pure data/logic and gpui-free
+data types (`crypto_core`, `converter`, `home`'s `Route`, `session`'s `KeyEntry`/`Session`,
+`agent`'s tool-calling loop) — `crates/app`'s views are thin gpui glue on top of those.
+
 - `src/views/sidebar.rs` is a hand-rolled nav rail, not gpui-component's `sidebar::{Sidebar,
   SidebarMenu, SidebarMenuItem}` — those components bake in behavior (a hover highlight on
   `SidebarHeader`, `overflow: hidden` on the panel that also clips its own box-shadow) that
@@ -77,10 +124,6 @@ Inside a session, six screens, navigated from the left sidebar:
     feature-card list is a different kind (nav row, not an output box) and is intentionally
     background-less — border only.
   - Every screen's root div owns its own `.p_6()` inset and `.overflow_y_scroll()`.
-- `src/theme.rs` + `themes/custom.json` — a custom light/dark theme whose palette is adapted from
-  Zed's built-in "One" theme (`assets/themes/one/one.json` in the Zed repo) — same neutral grays,
-  border tones and accent blue as Zed's editor UI, remapped onto gpui-component's theme schema,
-  loaded the same way as the sibling `gpui-playground` project's `theme.rs`.
 
 ## House rules (inherited from `gpui-playground/CLAUDE.md` — read that file too)
 
@@ -93,16 +136,21 @@ Inside a session, six screens, navigated from the left sidebar:
    `Entity<InputState>` (gpui-component's own text-input state) is exempt, since it's a required
    leaf entity for text editing to work at all.
 2. Dependencies (`gpui`, `gpui_platform`, `gpui-component`, `gpui-component-assets`) are pinned to
-   specific git revisions in `Cargo.toml`/`Cargo.lock` — copied from `gpui-playground` for the
-   first two. Don't let a bare `cargo update` re-resolve them to different, untested commits;
-   bump deliberately and re-test hover/interactivity if you do.
+   specific git revisions once, in the root `Cargo.toml`'s `[workspace.dependencies]` (and
+   `Cargo.lock`) — copied from `gpui-playground` for the first two. Don't let a bare
+   `cargo update` re-resolve them to different, untested commits; bump deliberately and re-test
+   hover/interactivity if you do. Note `gpui`/`gpui_platform` are pinned by plain `git = "..."`
+   URL with no `rev`, matching how `gpui-component` itself depends on `gpui` transitively — adding
+   an explicit `rev` there makes Cargo see two different source strings for the same commit and
+   resolve two copies of the crate, which fails to compile.
 3. No raw hex/`rgb`/`hsla` colors in view code — resolve everything through `cx.theme()` (see
-   `src/ui/style.rs` for the shared surface helpers). The theme itself (`themes/custom.json`) is
-   the one place color values are defined directly.
+   `crates/app/src/views/mod.rs` for the shared surface helpers: `result_tile`, `radio_row`,
+   `field_with_picker`). The theme itself (`themes/custom.json`) is the one place color values are
+   defined directly.
 4. Icons come from `gpui-component-assets`' bundled set, which is small and has no dedicated
-   home/lock/key glyphs. The sidebar (`src/views/sidebar.rs`) picks the closest thematic
-   substitutes (`layout-dashboard`, `replace`, `cpu`, `eye-off`, `eye`, `file`) rather than
-   inventing new icon assets — check the bundled SVG list before assuming an icon name exists.
+   home/lock/key glyphs. The sidebar (`crates/app/src/views/sidebar.rs`) picks the closest
+   thematic substitutes (`layout-dashboard`, `replace`, `cpu`, `eye-off`, `eye`, `file`) rather
+   than inventing new icon assets — check the bundled SVG list before assuming an icon name exists.
 5. On a selected/active `Button` (solid `primary` background), any icon or text inside it should
    use `cx.theme().primary_foreground` for contrast, not an arbitrary accent color — the button's
    own background already carries the "selected" signal.
@@ -112,14 +160,15 @@ Inside a session, six screens, navigated from the left sidebar:
 - Algorithm/type/key-size pickers use the standard `radio::{Radio, RadioGroup}` components
   (via the `views::radio_row` helper) rather than a `Select`/dropdown — a fixed, always-visible
   set of 2-6 mutually exclusive options reads better as a radio group than a dropdown.
-- Key/IV "pick from history" opens a modal `Dialog` (`ui::key_picker::open_key_picker`), not an
-  inline row of buttons.
+- Key/IV "pick from history" opens a modal `Dialog` (`crates/app/src/ui/key_picker.rs`'s
+  `open_key_picker`), not an inline row of buttons.
 - Copy-to-clipboard has no toast/snackbar confirmation.
 - No i18n — English only.
 
 ## Testing
 
-`cargo test` covers `crypto.rs` (ported 1:1 from the original, including edge cases like wrong
-key length, invalid IV, wrong-key decryption failure), `converter.rs`, and `home_search.rs`. Treat
-these as regression tests for functional parity with the original app — if you change behavior,
-update the test that encodes the old behavior deliberately, don't just delete it.
+`cargo test --workspace` covers `crypto_core::crypto` (ported 1:1 from the original, including
+edge cases like wrong key length, invalid IV, wrong-key decryption failure), `converter`, and
+`home`'s `home_search`. Treat these as regression tests for functional parity with the original
+app — if you change behavior, update the test that encodes the old behavior deliberately, don't
+just delete it.

@@ -6,7 +6,7 @@ use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 
 use crate::app::CrittoUtil;
-use crate::crypto;
+use crypto_core::crypto;
 
 fn format_size(bytes: u64) -> String {
     if bytes < 1024 {
