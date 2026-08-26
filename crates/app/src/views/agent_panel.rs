@@ -59,26 +59,21 @@ pub fn render(
                         .font_weight(gpui::FontWeight::BOLD)
                         .child("Agent"),
                 )
-                .child(
-                    div()
-                        .id("agent-close-btn")
-                        .flex()
-                        .items_center()
-                        .gap_1()
-                        .px_2()
-                        .py_1()
-                        .rounded(cx.theme().radius)
-                        .text_sm()
-                        .border_1()
-                        .border_color(cx.theme().border)
-                        .hover(|s| s.bg(cx.theme().secondary_hover))
-                        .child(Icon::new(IconName::Close).xsmall())
-                        .child("Close")
-                        .on_click(cx.listener(|this, _, _window, cx| {
-                            this.agent.open = false;
-                            cx.notify();
-                        })),
-                ),
+                .child({
+                    let entity = cx.entity().clone();
+                    Button::new("agent-close-btn")
+                        .icon(IconName::Close)
+                        .label("Close")
+                        .small()
+                        .ghost()
+                        .on_click(move |_, window, cx| {
+                            entity.update(cx, |this, cx| {
+                                this.agent.open = false;
+                                cx.notify();
+                            });
+                            window.refresh();
+                        })
+                }),
         )
         .child({
             let mut messages = div()
