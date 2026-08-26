@@ -452,10 +452,8 @@ impl Render for CrittoUtil {
                                     div()
                                         .id("agent-backdrop")
                                         .absolute()
-                                        .left_0()
+                                        .inset_0()
                                         .top(px(28.0))
-                                        .bottom_0()
-                                        .right(gpui::rems(26.0))
                                         .bg(gpui::hsla(0.0, 0.0, 0.0, 0.08))
                                         .hover(|s| s.bg(gpui::hsla(0.0, 0.0, 0.0, 0.08)))
                                         .on_click(cx.listener(|this, _, _window, cx| {
