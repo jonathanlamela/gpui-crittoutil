@@ -30,9 +30,21 @@ pub fn render(
         .flex()
         .flex_col()
         .absolute()
-        .inset_0()
+        .right_0()
+        .top_0()
+        .bottom_0()
+        .w(gpui::rems(26.0))
         .pt(gpui::px(28.0))
         .bg(cx.theme().background)
+        .border_l_1()
+        .border_color(cx.theme().border)
+        .shadow(vec![gpui::BoxShadow {
+            color: gpui::hsla(0.0, 0.0, 0.0, 0.12),
+            offset: gpui::point(gpui::px(-4.0), gpui::px(0.0)),
+            blur_radius: gpui::px(20.0),
+            spread_radius: gpui::px(0.0),
+            inset: false,
+        }])
         .child(
             div()
                 .flex()
@@ -179,9 +191,17 @@ fn message_bubble(role: &str, content: &str, cx: &mut Context<CrittoUtil>) -> im
         .flex()
         .flex_col()
         .gap_1()
-        .p_2()
+        .p_3()
         .when(is_user, |this| this.bg(cx.theme().secondary))
+        .when(!is_user, |this| this.bg(cx.theme().background).border_1().border_color(cx.theme().border))
         .rounded(cx.theme().radius)
+        .shadow(vec![gpui::BoxShadow {
+            color: gpui::hsla(0.0, 0.0, 0.0, 0.07),
+            offset: gpui::point(gpui::px(0.0), gpui::px(2.0)),
+            blur_radius: gpui::px(8.0),
+            spread_radius: gpui::px(0.0),
+            inset: false,
+        }])
         .child(
             div()
                 .text_xs()
