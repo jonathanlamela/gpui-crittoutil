@@ -62,8 +62,9 @@ pub fn render(
                 .child(
                     Button::new("agent-close-btn")
                         .icon(IconName::Close)
+                        .label("Close")
+                        .small()
                         .ghost()
-                        .xsmall()
                         .tooltip("Close agent")
                         .on_click(cx.listener(|this, _, _window, cx| {
                             this.toggle_agent(cx);
