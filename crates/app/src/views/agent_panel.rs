@@ -30,22 +30,9 @@ pub fn render(
         .flex()
         .flex_col()
         .absolute()
-        .right_0()
-        .top_0()
-        .bottom_0()
-        .w(gpui::rems(26.0))
-        .h_full()
+        .inset_0()
         .pt(gpui::px(28.0))
         .bg(cx.theme().background)
-        .border_l_1()
-        .border_color(cx.theme().border)
-        .shadow(vec![gpui::BoxShadow {
-            color: gpui::hsla(0.0, 0.0, 0.0, 0.15),
-            offset: gpui::point(gpui::px(-4.0), gpui::px(0.0)),
-            blur_radius: gpui::px(24.0),
-            spread_radius: gpui::px(0.0),
-            inset: false,
-        }])
         .child(
             div()
                 .flex()
