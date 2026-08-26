@@ -66,6 +66,7 @@ pub fn render(
                         .small()
                         .ghost()
                         .on_click(cx.listener(|this, _, _window, cx| {
+                            eprintln!("[agent] close btn clicked, open was {}", this.agent.open);
                             this.agent.open = false;
                             cx.notify();
                         })),
