@@ -45,7 +45,6 @@ pub fn render(
             spread_radius: gpui::px(0.0),
             inset: false,
         }])
-        // Capture clicks so they don't fall through to content underneath
         .on_click(cx.listener(|_, _, _, _| {}))
         .child(
             div()
@@ -62,10 +61,15 @@ pub fn render(
                         .child("Agent"),
                 )
                 .child(
-                    div()
-                        .text_xs()
-                        .text_color(cx.theme().muted_foreground)
-                        .child("Press Esc or click outside to close"),
+                    Button::new("agent-close-btn-panel")
+                        .icon(IconName::Close)
+                        .label("Close")
+                        .small()
+                        .ghost()
+                        .on_click(cx.listener(|this, _, _window, cx| {
+                            this.agent.open = false;
+                            cx.notify();
+                        })),
                 ),
         )
         .child({
