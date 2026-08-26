@@ -361,7 +361,6 @@ impl Render for CrittoUtil {
                     .flex()
                     .flex_row()
                     .size_full()
-                    .relative()
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)
                     .child(views::sidebar::render(self, window, cx))
@@ -371,6 +370,7 @@ impl Render for CrittoUtil {
                             .flex_1()
                             .min_w_0()
                             .h_full()
+                            .relative()
                             .child(
                                 div()
                                     .id("crittoutil-content")
@@ -446,7 +446,6 @@ impl Render for CrittoUtil {
                                                 }
                                             }),
                                     )
-                            )
                             ),
                     )
                     .when(self.agent.open, |row| {
