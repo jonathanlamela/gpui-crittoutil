@@ -1,12 +1,12 @@
-pub mod sidebar;
-pub mod home;
-pub mod converter;
-pub mod key_generator;
-pub mod encrypter;
-pub mod decrypter;
-pub mod file_hasher;
-pub mod session_picker;
 pub mod agent_panel;
+pub mod converter;
+pub mod decrypter;
+pub mod encrypter;
+pub mod file_hasher;
+pub mod home;
+pub mod key_generator;
+pub mod session_picker;
+pub mod sidebar;
 
 use gpui::{Context, Corners, IntoElement, ParentElement, SharedString, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;
@@ -25,25 +25,6 @@ use crate::ui::key_picker::open_key_picker;
 /// value — the shared "secondary output" treatment (rounded, `theme.secondary`
 /// background, no border) used across Converter/Encrypter/Decrypter/Key
 /// Generator/File Hasher for whatever the screen just produced.
-pub fn section_header(cx: &mut Context<CrittoUtil>, title: &str, subtitle: &str) -> impl IntoElement {
-    div()
-        .flex()
-        .flex_col()
-        .gap_1()
-        .child(
-            div()
-                .text_lg()
-                .font_weight(gpui::FontWeight::BOLD)
-                .text_color(cx.theme().foreground)
-                .child(title.to_string()),
-        )
-        .child(
-            div()
-                .text_xs()
-                .text_color(cx.theme().muted_foreground)
-                .child(subtitle.to_string()),
-        )
-}
 
 pub fn result_tile(
     cx: &mut Context<CrittoUtil>,
@@ -112,11 +93,21 @@ pub fn radio_row(
         .flex()
         .flex_col()
         .gap_1()
-        .child(div().text_xs().text_color(cx.theme().muted_foreground).child(label.to_string()))
+        .child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(label.to_string()),
+        )
         .child(
             RadioGroup::horizontal(group_id)
                 .selected_index(selected_index)
-                .children(labels.into_iter().enumerate().map(|(i, l)| Radio::new(format!("{group_id}-{i}")).label(l)))
+                .children(
+                    labels
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, l)| Radio::new(format!("{group_id}-{i}")).label(l)),
+                )
                 .on_click(move |idx: &usize, window, cx| {
                     let idx = *idx;
                     entity.update(cx, |this, cx| on_pick(this, idx, window, cx));
@@ -148,7 +139,12 @@ pub fn field_with_picker(
                 .flex()
                 .items_center()
                 .justify_between()
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child(label.to_string()))
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(label.to_string()),
+                )
                 .child(
                     Button::new(SharedString::from(picker_id))
                         .label(picker_label)
@@ -157,7 +153,14 @@ pub fn field_with_picker(
                         .disabled(!has_history)
                         .on_click(cx.listener(move |_this, _, window, cx| {
                             let entity = cx.entity();
-                            open_key_picker(&entity, window, cx, picker_label, keys.clone(), on_pick.clone());
+                            open_key_picker(
+                                &entity,
+                                window,
+                                cx,
+                                picker_label,
+                                keys.clone(),
+                                on_pick.clone(),
+                            );
                         })),
                 ),
         )

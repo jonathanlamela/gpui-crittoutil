@@ -1,6 +1,6 @@
 use gpui::{
-    AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
-    Styled, Window, div, prelude::FluentBuilder as _,
+    px, AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
+    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _,
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::IconName;
@@ -436,7 +436,21 @@ impl Render for CrittoUtil {
                                     )
                             )
                             .when(self.agent.open, |wrap| {
-                                wrap.child(views::agent_panel::render(self, window, cx))
+                                wrap.child(
+                                    div()
+                                        .id("agent-backdrop")
+                                        .absolute()
+                                        .left_0()
+                                        .top(px(28.0))
+                                        .bottom_0()
+                                        .right(gpui::rems(26.0))
+                                        .bg(gpui::hsla(0.0, 0.0, 0.0, 0.08))
+                                        .on_click(cx.listener(|this, _, _window, cx| {
+                                            this.agent.open = false;
+                                            cx.notify();
+                                        })),
+                                )
+                                .child(views::agent_panel::render(self, window, cx))
                             }),
                     )
                     .into_any_element()

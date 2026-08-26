@@ -3,14 +3,13 @@ use gpui::{
     Styled, Window, div,
 };
 use gpui_component::ActiveTheme as _;
+use gpui_component::Sizable as _;
 use gpui_component::button::{Button, ButtonVariants as _};
-use gpui_component::Sizable as _;
-use gpui_component::Sizable as _;
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
-use crypto_core::crypto_meta::{self, DECRYPT_ALGORITHMS};
 use crate::views::{field_with_picker, radio_row};
+use crypto_core::crypto_meta::{self, DECRYPT_ALGORITHMS};
 
 pub fn render(
     app: &CrittoUtil,

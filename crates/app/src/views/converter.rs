@@ -3,14 +3,13 @@ use gpui::{
     Styled, Window, div,
 };
 use gpui_component::ActiveTheme as _;
+use gpui_component::Sizable as _;
 use gpui_component::button::{Button, ButtonVariants as _};
-use gpui_component::Sizable as _;
-use gpui_component::Sizable as _;
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
-use converter::{self, ConvType};
 use crate::views::{radio_row, result_tile};
+use converter::{self, ConvType};
 
 pub fn render(
     app: &CrittoUtil,
@@ -115,9 +114,10 @@ pub fn render(
                     cx.notify();
                 })),
         )
-        .children((!c.output.is_empty()).then(|| {
-            result_tile(cx, "Output", c.output.clone(), "converter-copy-btn")
-        }))
+        .children(
+            (!c.output.is_empty())
+                .then(|| result_tile(cx, "Output", c.output.clone(), "converter-copy-btn")),
+        )
 }
 
 fn err_text(msg: &str, cx: &mut Context<CrittoUtil>) -> Option<impl IntoElement> {
