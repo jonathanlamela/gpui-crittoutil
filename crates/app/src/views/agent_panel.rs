@@ -142,7 +142,9 @@ pub fn sheet_content_with_data(
         .flex_col()
         .size_full()
         .gap_2()
-        .p_2()
+        .px_3()
+        .pb_3()
+        .pt_1()
         .child({
             let mut list = div().id("agent-sheet-messages").flex().flex_col().flex_1().gap_2().overflow_y_scroll();
             for item in display_items {
@@ -164,7 +166,7 @@ pub fn sheet_content_with_data(
             if is_running { list=list.child(div().text_xs().child("Thinking…")); }
             list
         })
-        .child(div().flex().flex_col().gap_2().border_t_1().border_color(gpui::hsla(220.0/360.0,0.13,0.91,1.0)).pt_3().child(Textarea::new(&input).w_full().h(gpui::rems(4.5))).child(Button::new("agent-sheet-send").icon(IconName::ArrowRight).label("Send").primary().small().disabled(is_running).on_click({let e=entity_send.clone(); move |_,window,cx| { e.update(cx, |this,cx| this.send_agent_message(window,cx)); }})))
+        .child(div().flex().flex_col().gap_2().border_t_1().border_color(gpui::hsla(220.0/360.0,0.13,0.91,1.0)).pt_3().child(Textarea::new(&input).w_full().h(gpui::rems(4.5))).child(div().flex().child(Button::new("agent-sheet-send").icon(IconName::ArrowRight).label("Send").primary().small().disabled(is_running).on_click({let e=entity_send.clone(); move |_,window,cx| { e.update(cx, |this,cx| this.send_agent_message(window,cx)); }}))))
 }
 
 /// Sheet-compatible content: same chat UI but without absolute positioning,
