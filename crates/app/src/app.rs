@@ -200,6 +200,9 @@ impl CrittoUtil {
 
     pub fn navigate(&mut self, route: Route, cx: &mut Context<Self>) {
         self.route = route;
+        // Agent is a full-width overlay above content — navigating should
+        // dismiss it so the newly selected section becomes visible.
+        self.agent.open = false;
         cx.notify();
     }
 
