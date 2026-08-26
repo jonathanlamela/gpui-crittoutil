@@ -6,12 +6,9 @@ the [Zed](https://zed.dev) editor. It's a functional port of `tauri-crittoutil` 
 features, same validation rules, but native Rust UI instead of a webview.
 
 <p align="center">
-  <img src="screenshots/02-home.png" width="49%" alt="Home screen" />
-  <img src="screenshots/01-converter.png" width="49%" alt="Converter screen" />
-</p>
-<p align="center">
-  <img src="screenshots/03-encrypter.png" width="49%" alt="Encrypter screen" />
-  <img src="screenshots/04-keygen.png" width="49%" alt="Key Generator screen" />
+  <img src="screenshots/02-home.png" width="32%" alt="Home screen" />
+  <img src="screenshots/01-converter.png" width="32%" alt="Converter screen" />
+  <img src="screenshots/04-keygen.png" width="32%" alt="Key Generator screen" />
 </p>
 
 > Screenshots reflect the current edge-to-edge sidebar (traffic lights inset) and slate+indigo palette.
