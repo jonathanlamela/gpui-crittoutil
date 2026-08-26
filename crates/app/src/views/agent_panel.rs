@@ -45,6 +45,7 @@ pub fn render(
             spread_radius: gpui::px(0.0),
             inset: false,
         }])
+        .hover(|s| s)
         .on_click(cx.listener(|_, _, _, _| {}))
         .child(
             div()
