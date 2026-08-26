@@ -134,7 +134,6 @@ pub fn sheet_content_with_data(
     expanded: std::collections::HashSet<usize>,
     _cx: &mut App,
 ) -> impl IntoElement {
-    let entity_clone = entity.clone();
     let entity_send = entity.clone();
     let entity_toggle = entity.clone();
     let display_items = build_display_items(&messages);
@@ -165,8 +164,7 @@ pub fn sheet_content_with_data(
             if is_running { list=list.child(div().text_xs().child("Thinking…")); }
             list
         })
-        .child(div().flex().flex_col().gap_2().border_t_1().border_color(gpui::hsla(220.0/360.0,0.13,0.91,1.0)).pt_3().child(Textarea::new(&input).w_full().h(gpui::rems(4.5))).child(Button::new("agent-sheet-send").icon(IconName::ArrowRight).label("Send").primary().disabled(is_running).on_click({let e=entity_send.clone(); move |_,window,cx| { e.update(cx, |this,cx| this.send_agent_message(window,cx)); }})))
-        .child(Button::new("agent-sheet-close").label("Close").ghost().on_click({let e=entity_clone.clone(); move |_,window,cx| { e.update(cx, |this,cx| { this.agent.open=false; cx.notify(); }); window.close_sheet(cx); }}))
+        .child(div().flex().flex_col().gap_2().border_t_1().border_color(gpui::hsla(220.0/360.0,0.13,0.91,1.0)).pt_3().child(Textarea::new(&input).w_full().h(gpui::rems(4.5))).child(Button::new("agent-sheet-send").icon(IconName::ArrowRight).label("Send").primary().small().disabled(is_running).on_click({let e=entity_send.clone(); move |_,window,cx| { e.update(cx, |this,cx| this.send_agent_message(window,cx)); }})))
 }
 
 /// Sheet-compatible content: same chat UI but without absolute positioning,
@@ -305,6 +303,7 @@ pub fn sheet_content(entity: &Entity<CrittoUtil>, cx: &mut App) -> impl IntoElem
                         .icon(IconName::ArrowRight)
                         .label("Send")
                         .primary()
+                        .small()
                         .disabled(is_running)
                         .on_click({
                             let e = entity_send.clone();
@@ -313,21 +312,6 @@ pub fn sheet_content(entity: &Entity<CrittoUtil>, cx: &mut App) -> impl IntoElem
                             }
                         }),
                 ),
-        )
-        .child(
-            Button::new("agent-sheet-close")
-                .label("Close")
-                .ghost()
-                .on_click({
-                    let e = entity_clone.clone();
-                    move |_, window, cx| {
-                        e.update(cx, |this, cx| {
-                            this.agent.open = false;
-                            cx.notify();
-                        });
-                        window.close_sheet(cx);
-                    }
-                }),
         )
 }
 
