@@ -299,18 +299,23 @@ pub fn sheet_content(entity: &Entity<CrittoUtil>, cx: &mut App) -> impl IntoElem
                 .pt_3()
                 .child(Textarea::new(&input).w_full().h(gpui::rems(4.5)))
                 .child(
-                    Button::new("agent-sheet-send")
-                        .icon(IconName::ArrowRight)
-                        .label("Send")
-                        .primary()
-                        .small()
-                        .disabled(is_running)
-                        .on_click({
-                            let e = entity_send.clone();
-                            move |_, window, cx| {
-                                e.update(cx, |this, cx| this.send_agent_message(window, cx));
-                            }
-                        }),
+                    div()
+                        .flex()
+                        .justify_start()
+                        .child(
+                            Button::new("agent-sheet-send")
+                                .icon(IconName::ArrowRight)
+                                .label("Send")
+                                .primary()
+                                .small()
+                                .disabled(is_running)
+                                .on_click({
+                                    let e = entity_send.clone();
+                                    move |_, window, cx| {
+                                        e.update(cx, |this, cx| this.send_agent_message(window, cx));
+                                    }
+                                }),
+                        ),
                 ),
         )
 }
