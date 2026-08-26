@@ -361,6 +361,7 @@ impl Render for CrittoUtil {
                     .flex()
                     .flex_row()
                     .size_full()
+                    .relative()
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)
                     .child(views::sidebar::render(self, window, cx))
@@ -370,7 +371,6 @@ impl Render for CrittoUtil {
                             .flex_1()
                             .min_w_0()
                             .h_full()
-                            .relative()
                             .child(
                                 div()
                                     .id("crittoutil-content")
@@ -447,23 +447,24 @@ impl Render for CrittoUtil {
                                             }),
                                     )
                             )
-                            .when(self.agent.open, |wrap| {
-                                wrap.child(
-                                    div()
-                                        .id("agent-backdrop")
-                                        .absolute()
-                                        .inset_0()
-                                        .top(px(28.0))
-                                        .bg(gpui::hsla(0.0, 0.0, 0.0, 0.08))
-                                        .hover(|s| s.bg(gpui::hsla(0.0, 0.0, 0.0, 0.08)))
-                                        .on_click(cx.listener(|this, _, _window, cx| {
-                                            this.agent.open = false;
-                                            cx.notify();
-                                        })),
-                                )
-                                .child(views::agent_panel::render(self, window, cx))
-                            }),
+                            ),
                     )
+                    .when(self.agent.open, |row| {
+                        row.child(
+                            div()
+                                .id("agent-backdrop-full")
+                                .absolute()
+                                .inset_0()
+                                .top(px(28.0))
+                                .bg(gpui::hsla(0.0, 0.0, 0.0, 0.08))
+                                .hover(|s| s.bg(gpui::hsla(0.0, 0.0, 0.0, 0.08)))
+                                .on_click(cx.listener(|this, _, _window, cx| {
+                                    this.agent.open = false;
+                                    cx.notify();
+                                })),
+                        )
+                        .child(views::agent_panel::render(self, window, cx))
+                    })
                     .into_any_element()
             })
             .children(sheet_layer)
