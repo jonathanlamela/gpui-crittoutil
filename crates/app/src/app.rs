@@ -451,6 +451,36 @@ impl Render for CrittoUtil {
                                         })),
                                 )
                                 .child(views::agent_panel::render(self, window, cx))
+                                .child(
+                                    div()
+                                        .id("agent-close-btn-app")
+                                        .absolute()
+                                        .top(px(34.0))
+                                        .right(px(8.0))
+                                        .px_2()
+                                        .py_1()
+                                        .rounded(px(6.0))
+                                        .bg(cx.theme().background)
+                                        .border_1()
+                                        .border_color(cx.theme().border)
+                                        .shadow(vec![gpui::BoxShadow {
+                                            color: gpui::hsla(0.0, 0.0, 0.0, 0.1),
+                                            offset: gpui::point(px(0.0), px(2.0)),
+                                            blur_radius: px(6.0),
+                                            spread_radius: px(0.0),
+                                            inset: false,
+                                        }])
+                                        .flex()
+                                        .items_center()
+                                        .gap_1()
+                                        .text_sm()
+                                        .child(gpui_component::Icon::new(IconName::Close).xsmall())
+                                        .child("Close")
+                                        .on_click(cx.listener(|this, _, _window, cx| {
+                                            this.agent.open = false;
+                                            cx.notify();
+                                        })),
+                                )
                             }),
                     )
                     .into_any_element()

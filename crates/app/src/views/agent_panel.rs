@@ -60,16 +60,10 @@ pub fn render(
                         .child("Agent"),
                 )
                 .child(
-                    Button::new("agent-close-btn")
-                        .icon(IconName::Close)
-                        .label("Close")
-                        .small()
-                        .ghost()
-                        .on_click(cx.listener(|this, _, _window, cx| {
-                            eprintln!("[agent] close btn clicked, open was {}", this.agent.open);
-                            this.agent.open = false;
-                            cx.notify();
-                        })),
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Press Esc or click outside to close"),
                 ),
         )
         .child({
