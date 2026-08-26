@@ -49,6 +49,7 @@ pub fn render(
             div()
                 .flex()
                 .items_center()
+                .justify_between()
                 .p_3()
                 .border_b_1()
                 .border_color(cx.theme().border)
@@ -57,6 +58,16 @@ pub fn render(
                         .text_sm()
                         .font_weight(gpui::FontWeight::BOLD)
                         .child("Agent"),
+                )
+                .child(
+                    Button::new("agent-close-btn")
+                        .icon(IconName::Close)
+                        .ghost()
+                        .xsmall()
+                        .tooltip("Close agent")
+                        .on_click(cx.listener(|this, _, _window, cx| {
+                            this.toggle_agent(cx);
+                        })),
                 ),
         )
         .child({
