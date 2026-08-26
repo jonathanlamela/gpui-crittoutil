@@ -261,23 +261,35 @@ impl CrittoUtil {
             cx.notify();
             return;
         }
+        // Clone data before opening Sheet to avoid reading the entity while
+        // it is still mutably borrowed by this `toggle_agent` update
+        // (entity_map.rs:164 panic: "cannot read while already being updated").
+        let (messages, input, is_running, expanded) = (
+            self.agent.messages.clone(),
+            self.agent.input.clone(),
+            self.agent.is_running,
+            self.agent.expanded_tool_calls.clone(),
+        );
+        let entity = cx.entity().clone();
+        let entity2 = entity.clone();
         self.agent.open = true;
         cx.notify();
-        let entity = cx.entity().clone();
         window.open_sheet_at(gpui_component::Placement::Right, cx, move |sheet, _window, cx| {
-            let entity2 = entity.clone();
+            let entity3 = entity2.clone();
             sheet
                 .title("Agent")
                 .size(gpui::px(420.0))
                 .overlay(true)
                 .overlay_closable(true)
                 .on_close(move |_, _, cx| {
-                    entity2.update(cx, |this, cx| {
+                    entity3.update(cx, |this, cx| {
                         this.agent.open = false;
                         cx.notify();
                     });
                 })
-                .child(views::agent_panel::sheet_content(&entity, cx))
+                .child(views::agent_panel::sheet_content_with_data(
+                    &entity, messages.clone(), input.clone(), is_running, expanded.clone(), cx,
+                ))
         });
     }
 
