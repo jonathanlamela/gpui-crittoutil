@@ -4,6 +4,7 @@ use gpui::{
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::Sizable as _;
+use gpui_component::WindowExt;
 use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::{InputState, TextareaState};
@@ -253,9 +254,31 @@ impl CrittoUtil {
         session::save_all(&self.sessions);
     }
 
-    pub fn toggle_agent(&mut self, cx: &mut Context<Self>) {
-        self.agent.open = !self.agent.open;
+    pub fn toggle_agent(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.agent.open {
+            window.close_sheet(cx);
+            self.agent.open = false;
+            cx.notify();
+            return;
+        }
+        self.agent.open = true;
         cx.notify();
+        let entity = cx.entity().clone();
+        window.open_sheet_at(gpui_component::Placement::Right, cx, move |sheet, _window, cx| {
+            let entity2 = entity.clone();
+            sheet
+                .title("Agent")
+                .size(gpui::px(420.0))
+                .overlay(true)
+                .overlay_closable(true)
+                .on_close(move |_, _, cx| {
+                    entity2.update(cx, |this, cx| {
+                        this.agent.open = false;
+                        cx.notify();
+                    });
+                })
+                .child(views::agent_panel::sheet_content(&entity, cx))
+        });
     }
 
     /// Send the agent panel's current input as a user message, then run the
@@ -397,22 +420,10 @@ impl Render for CrittoUtil {
                                                     .map(|btn| {
                                                         if self.agent.open { btn.primary() } else { btn.info() }
                                                     })
-                                                    .on_click(cx.listener(|this, _, _window, cx| {
-                                                        this.toggle_agent(cx);
+                                                    .on_click(cx.listener(|this, _, window, cx| {
+                                                        this.toggle_agent(window, cx);
                                                     })),
-                                            )
-                                            .when(self.agent.open, |row| {
-                                                row.child(
-                                                    Button::new("close-agent-mode")
-                                                        .icon(IconName::Close)
-                                                        .label("Close")
-                                                        .ghost()
-                                                        .on_click(cx.listener(|this, _, _window, cx| {
-                                                            this.agent.open = false;
-                                                            cx.notify();
-                                                        })),
-                                                )
-                                            }),
+                                            ),
                                     )
                                     // The section-specific container for whichever screen is active.
                                     .child(
@@ -448,22 +459,6 @@ impl Render for CrittoUtil {
                                     )
                             ),
                     )
-                    .when(self.agent.open, |row| {
-                        row.child(
-                            div()
-                                .id("agent-backdrop-full")
-                                .absolute()
-                                .inset_0()
-                                .top(px(28.0))
-                                .bg(gpui::hsla(0.0, 0.0, 0.0, 0.08))
-                                .hover(|s| s.bg(gpui::hsla(0.0, 0.0, 0.0, 0.08)))
-                                .on_click(cx.listener(|this, _, _window, cx| {
-                                    this.agent.open = false;
-                                    cx.notify();
-                                })),
-                        )
-                        .child(views::agent_panel::render(self, window, cx))
-                    })
                     .into_any_element()
             })
             .children(sheet_layer)

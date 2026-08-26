@@ -1,6 +1,6 @@
 use gpui::{
-    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _,
-    Styled, Window, div, prelude::FluentBuilder as _,
+    App, Context, Entity, InteractiveElement, IntoElement, ParentElement,
+    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _,
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::Disableable as _;
@@ -8,6 +8,7 @@ use gpui_component::IconName;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Textarea;
 use gpui_component::text::markdown;
+use gpui_component::WindowExt as _;
 use gpui_component::{Icon, Sizable as _};
 
 use agent::ChatMessage;
@@ -111,8 +112,8 @@ pub fn render(
                 .border_t_1()
                 .border_color(cx.theme().border)
                 .child(Textarea::new(&a.input).w_full().h(gpui::rems(4.5)))
-                .child(
-                    Button::new("agent-send-btn")
+        .child(
+            Button::new("agent-send-btn")
                         .icon(IconName::ArrowRight)
                         .label("Send")
                         .primary()
@@ -122,6 +123,168 @@ pub fn render(
                             this.send_agent_message(window, cx);
                         })),
                 ),
+        )
+}
+
+/// Sheet-compatible content: same chat UI but without absolute positioning,
+/// suitable as `sheet.child(...)`. Uses the entity so button handlers can
+/// update `CrittoUtil` even though the Sheet's `cx` is `&mut App`.
+pub fn sheet_content(entity: &Entity<CrittoUtil>, cx: &mut App) -> impl IntoElement {
+    let (messages, input, is_running, expanded) = entity.read_with(cx, |this, _| {
+        (
+            this.agent.messages.clone(),
+            this.agent.input.clone(),
+            this.agent.is_running,
+            this.agent.expanded_tool_calls.clone(),
+        )
+    });
+    let entity_clone = entity.clone();
+    let entity_send = entity.clone();
+    let entity_toggle = entity.clone();
+
+    // Build display items inline to avoid borrowing `Context<CrittoUtil>`
+    let display_items = build_display_items(&messages);
+
+    div()
+        .flex()
+        .flex_col()
+        .size_full()
+        .gap_3()
+        .p_3()
+        .child({
+            let mut list = div()
+                .id("agent-sheet-messages")
+                .flex()
+                .flex_col()
+                .flex_1()
+                .gap_3()
+                .overflow_y_scroll();
+            for item in display_items {
+                match item {
+                    DisplayItem::Message { role, content } => {
+                        let is_user = role == "user";
+                        list = list.child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap_1()
+                                .p_3()
+                                .rounded(gpui::px(8.0))
+                                .when(is_user, |d| d.bg(gpui::hsla(240.0 / 360.0, 0.05, 0.96, 1.0)))
+                                .when(!is_user, |d| {
+                                    d.bg(gpui::hsla(0.0, 0.0, 1.0, 1.0))
+                                        .border_1()
+                                        .border_color(gpui::hsla(220.0 / 360.0, 0.13, 0.91, 1.0))
+                                })
+                                .shadow(vec![gpui::BoxShadow {
+                                    color: gpui::hsla(0.0, 0.0, 0.0, 0.07),
+                                    offset: gpui::point(gpui::px(0.0), gpui::px(2.0)),
+                                    blur_radius: gpui::px(8.0),
+                                    spread_radius: gpui::px(0.0),
+                                    inset: false,
+                                }])
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .font_weight(gpui::FontWeight::BOLD)
+                                        .child(if is_user { "You".to_string() } else { "Agent".to_string() }),
+                                )
+                                .child(div().text_sm().child(markdown(content))),
+                        );
+                    }
+                    DisplayItem::Tools { group_index, calls } => {
+                        let expanded_here = expanded.contains(&group_index);
+                        let names = calls.iter().map(|c| c.name.as_str()).collect::<Vec<_>>().join(", ");
+                        let ec = entity_toggle.clone();
+                        let mut container = div()
+                            .flex()
+                            .flex_col()
+                            .rounded(gpui::px(8.0))
+                            .border_1()
+                            .border_color(gpui::hsla(220.0 / 360.0, 0.13, 0.91, 1.0))
+                            .child(
+                                div()
+                                    .id(("agent-sheet-tool", group_index))
+                                    .flex()
+                                    .items_center()
+                                    .gap_2()
+                                    .px_3()
+                                    .py_2()
+                                    .text_xs()
+                                    .child(Icon::new(IconName::Settings2).xsmall())
+                                    .child(div().flex_1().truncate().child(names))
+                                    .child(Icon::new(if expanded_here {
+                                        IconName::ChevronDown
+                                    } else {
+                                        IconName::ChevronRight
+                                    }).xsmall())
+                                    .on_click(move |_, _, cx| {
+                                        ec.update(cx, |this, cx| this.toggle_tool_group(group_index, cx));
+                                    }),
+                            );
+                        if expanded_here {
+                            let mut body = div().flex().flex_col().gap_2().p_3();
+                            for call in &calls {
+                                body = body.child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .gap_1()
+                                        .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child(call.name.clone()))
+                                        .child(div().text_xs().font_family("monospace").p_2().child(pretty_json(&call.arguments)))
+                                        .children(call.result.as_ref().map(|r| {
+                                            div().flex().flex_col().gap_1().child(div().text_xs().child("Result")).child(div().text_xs().font_family("monospace").p_2().child(pretty_json(r)))
+                                        })),
+                                );
+                            }
+                            container = container.child(body);
+                        }
+                        list = list.child(container);
+                    }
+                }
+            }
+            if is_running {
+                list = list.child(div().text_xs().child("Thinking…"));
+            }
+            list
+        })
+        .child(
+            div()
+                .flex()
+                .flex_col()
+                .gap_2()
+                .border_t_1()
+                .border_color(gpui::hsla(220.0 / 360.0, 0.13, 0.91, 1.0))
+                .pt_3()
+                .child(Textarea::new(&input).w_full().h(gpui::rems(4.5)))
+                .child(
+                    Button::new("agent-sheet-send")
+                        .icon(IconName::ArrowRight)
+                        .label("Send")
+                        .primary()
+                        .disabled(is_running)
+                        .on_click({
+                            let e = entity_send.clone();
+                            move |_, window, cx| {
+                                e.update(cx, |this, cx| this.send_agent_message(window, cx));
+                            }
+                        }),
+                ),
+        )
+        .child(
+            Button::new("agent-sheet-close")
+                .label("Close")
+                .ghost()
+                .on_click({
+                    let e = entity_clone.clone();
+                    move |_, window, cx| {
+                        e.update(cx, |this, cx| {
+                            this.agent.open = false;
+                            cx.notify();
+                        });
+                        window.close_sheet(cx);
+                    }
+                }),
         )
 }
 
