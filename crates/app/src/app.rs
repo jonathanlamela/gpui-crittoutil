@@ -387,8 +387,7 @@ impl Render for CrittoUtil {
                                         div()
                                             .flex()
                                             .justify_end()
-                                            // Matches each screen's own `.p_6()` inset below, so
-                                            // this button's right edge lines up with theirs.
+                                            .gap_2()
                                             .px_6()
                                             .pt_3()
                                             .child(
@@ -401,7 +400,19 @@ impl Render for CrittoUtil {
                                                     .on_click(cx.listener(|this, _, _window, cx| {
                                                         this.toggle_agent(cx);
                                                     })),
-                                            ),
+                                            )
+                                            .when(self.agent.open, |row| {
+                                                row.child(
+                                                    Button::new("close-agent-mode")
+                                                        .icon(IconName::Close)
+                                                        .label("Close")
+                                                        .ghost()
+                                                        .on_click(cx.listener(|this, _, _window, cx| {
+                                                            this.agent.open = false;
+                                                            cx.notify();
+                                                        })),
+                                                )
+                                            }),
                                     )
                                     // The section-specific container for whichever screen is active.
                                     .child(
