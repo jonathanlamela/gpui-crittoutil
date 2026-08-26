@@ -14,6 +14,8 @@ features, same validation rules, but native Rust UI instead of a webview.
   <img src="screenshots/04-keygen.png" width="49%" alt="Key Generator screen" />
 </p>
 
+> **Note:** screenshots above still show the previous floating-card sidebar. Since `dc714c0` the sidebar is a full-height edge-to-edge panel with the macOS traffic lights inset (`pt(28px)`) and a refreshed slate+indigo palette (`themes/custom.json`). Regenerate with `cargo run` + `screencapture -w` (select window) and overwrite `screenshots/*.png`.
+
 ## Features
 
 ### Sessions
