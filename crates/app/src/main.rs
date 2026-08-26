@@ -26,7 +26,7 @@ fn main() {
             win_options.titlebar = Some(TitlebarOptions {
                 title: Some(SharedString::from("CrittoUtil")),
                 appears_transparent: true,
-                traffic_light_position: None,
+                traffic_light_position: Some(point(Pixels::from(12.0), Pixels::from(12.0))),
             });
 
             cx.open_window(win_options, |window, cx| {

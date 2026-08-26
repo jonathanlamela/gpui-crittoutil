@@ -358,17 +358,11 @@ impl Render for CrittoUtil {
             } else {
                 div()
                     .flex()
-                    .flex_col()
+                    .flex_row()
                     .size_full()
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .flex_1()
-                            .min_h_0()
-                            .child(views::sidebar::render(self, window, cx))
+                    .child(views::sidebar::render(self, window, cx))
                             .child(
                                 div()
                                     .id("crittoutil-content")
@@ -377,7 +371,7 @@ impl Render for CrittoUtil {
                                     .flex_1()
                                     .h_full()
                                     .overflow_hidden()
-                                    .mt_4()
+                                    .pt_7()
                                     // Fixed container, common to every screen — currently just
                                     // the agent toggle, but any chrome that should appear above
                                     // every section (not just some) belongs here, not repeated
@@ -433,8 +427,7 @@ impl Render for CrittoUtil {
                                                         .into_any_element()
                                                 }
                                             }),
-                                    ),
-                            )
+                                    )
                             .when(self.agent.open, |row| {
                                 row.child(views::agent_panel::render(self, window, cx))
                             }),

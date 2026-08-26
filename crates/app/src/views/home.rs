@@ -1,4 +1,4 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div};
+use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -30,9 +30,21 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
         .overflow_y_scroll()
         .child(
             div()
-                .text_lg()
-                .font_weight(gpui::FontWeight::BOLD)
-                .child("CrittoUtil"),
+                .flex()
+                .flex_col()
+                .gap_1()
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(gpui::FontWeight::BOLD)
+                        .child("Welcome back"),
+                )
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Search or pick a tool to get started."),
+                ),
         )
         .child(Input::new(&app.home_search).cleanable(true))
         .children(match suggestion {
@@ -74,8 +86,21 @@ fn feature_card(route: Route, description: &'static str, cx: &mut Context<Critto
         .items_center()
         .gap_3()
         .p_4()
-        .hover(|this| this.bg(cx.theme().secondary))
-        .child(Icon::new(route_icon(route)).text_color(cx.theme().muted_foreground))
+        .rounded(px(10.0))
+        .bg(cx.theme().secondary)
+        .border_1()
+        .border_color(cx.theme().border)
+        .hover(|this| this.bg(cx.theme().secondary_hover).border_color(cx.theme().primary.opacity(0.25)))
+        .child(
+            div()
+                .size(px(36.0))
+                .rounded(px(8.0))
+                .bg(cx.theme().accent)
+                .flex()
+                .items_center()
+                .justify_center()
+                .child(Icon::new(route_icon(route)).text_color(cx.theme().accent_foreground)),
+        )
         .child(
             div()
                 .flex_1()

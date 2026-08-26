@@ -25,6 +25,26 @@ use crate::ui::key_picker::open_key_picker;
 /// value — the shared "secondary output" treatment (rounded, `theme.secondary`
 /// background, no border) used across Converter/Encrypter/Decrypter/Key
 /// Generator/File Hasher for whatever the screen just produced.
+pub fn section_header(cx: &mut Context<CrittoUtil>, title: &str, subtitle: &str) -> impl IntoElement {
+    div()
+        .flex()
+        .flex_col()
+        .gap_1()
+        .child(
+            div()
+                .text_lg()
+                .font_weight(gpui::FontWeight::BOLD)
+                .text_color(cx.theme().foreground)
+                .child(title.to_string()),
+        )
+        .child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(subtitle.to_string()),
+        )
+}
+
 pub fn result_tile(
     cx: &mut Context<CrittoUtil>,
     title: &str,
@@ -35,10 +55,25 @@ pub fn result_tile(
         .flex()
         .flex_col()
         .gap_2()
-        .p_3()
+        .p_4()
         .bg(cx.theme().secondary)
+        .border_1()
+        .border_color(cx.theme().border)
         .corner_radii(Corners::all(px(10.0)))
-        .child(div().text_xs().font_weight(gpui::FontWeight::BOLD).child(title.to_string()))
+        .shadow(vec![gpui::BoxShadow {
+            color: cx.theme().foreground.opacity(0.04),
+            offset: gpui::point(px(0.0), px(1.0)),
+            blur_radius: px(8.0),
+            spread_radius: px(0.0),
+            inset: false,
+        }])
+        .child(
+            div()
+                .text_xs()
+                .font_weight(gpui::FontWeight::SEMIBOLD)
+                .text_color(cx.theme().muted_foreground)
+                .child(title.to_uppercase()),
+        )
         .child(
             div()
                 .flex()
