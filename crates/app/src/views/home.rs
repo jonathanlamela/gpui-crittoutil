@@ -1,6 +1,8 @@
 use gpui::{Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement as _, Styled, Window, div, px};
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
+use gpui_component::Sizable as _;
+use gpui_component::Sizable as _;
 use gpui_component::input::Input;
 use gpui_component::Icon;
 
@@ -46,7 +48,7 @@ pub fn render(app: &CrittoUtil, _window: &mut Window, cx: &mut Context<CrittoUti
                         .child("Search or pick a tool to get started."),
                 ),
         )
-        .child(Input::new(&app.home_search).cleanable(true))
+        .child(Input::new(&app.home_search).large().cleanable(true))
         .children(match suggestion {
             Some(route) => Some(
                 div()
@@ -108,7 +110,7 @@ fn feature_card(route: Route, description: &'static str, cx: &mut Context<Critto
                 .flex_col()
                 .gap_1()
                 .child(div().text_sm().font_weight(gpui::FontWeight::BOLD).child(route.label()))
-                .child(div().text_xs().text_color(cx.theme().muted_foreground).child(description)),
+                .child(div().text_sm().text_color(cx.theme().muted_foreground).child(description)),
         )
         .on_click(cx.listener(move |this, _, _window, cx| this.navigate(route, cx)))
 }

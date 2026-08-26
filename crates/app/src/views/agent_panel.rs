@@ -32,6 +32,8 @@ pub fn render(
         .w(gpui::rems(22.0))
         .h_full()
         .flex_shrink_0()
+        .pt(gpui::px(28.0))
+        .bg(cx.theme().background)
         .border_l_1()
         .border_color(cx.theme().border)
         .child(

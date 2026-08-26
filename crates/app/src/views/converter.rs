@@ -4,6 +4,8 @@ use gpui::{
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
+use gpui_component::Sizable as _;
+use gpui_component::Sizable as _;
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
@@ -50,7 +52,7 @@ pub fn render(
                         })),
                 ),
         )
-        .child(Input::new(&c.input).cleanable(true))
+        .child(Input::new(&c.input).large().cleanable(true))
         .children(err_text(&c.input_error, cx))
         .child(type_row(
             app,

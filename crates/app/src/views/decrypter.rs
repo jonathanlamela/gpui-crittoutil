@@ -4,6 +4,8 @@ use gpui::{
 };
 use gpui_component::ActiveTheme as _;
 use gpui_component::button::{Button, ButtonVariants as _};
+use gpui_component::Sizable as _;
+use gpui_component::Sizable as _;
 use gpui_component::input::Input;
 
 use crate::app::CrittoUtil;
@@ -64,14 +66,14 @@ pub fn render(
                         .text_color(cx.theme().muted_foreground)
                         .child("Base64 payload to decrypt"),
                 )
-                .child(Input::new(&d.payload).cleanable(true)),
+                .child(Input::new(&d.payload).large().cleanable(true)),
         )
         .children(alg.iv_length.is_some().then(|| {
             field_with_picker(
                 app,
                 cx,
                 "IV",
-                Input::new(&d.iv).cleanable(true),
+                Input::new(&d.iv).large().cleanable(true),
                 "decrypter-pick-iv",
                 "Pick IV",
                 |this, name, window, cx| {
@@ -85,7 +87,7 @@ pub fn render(
             app,
             cx,
             "Key",
-            Input::new(&d.key).cleanable(true),
+            Input::new(&d.key).large().cleanable(true),
             "decrypter-pick-key",
             "Pick key",
             |this, name, window, cx| {
