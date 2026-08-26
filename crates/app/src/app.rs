@@ -363,13 +363,19 @@ impl Render for CrittoUtil {
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)
                     .child(views::sidebar::render(self, window, cx))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_1()
+                            .min_w_0()
+                            .h_full()
+                            .relative()
                             .child(
                                 div()
                                     .id("crittoutil-content")
                                     .flex()
                                     .flex_col()
-                                    .flex_1()
-                                    .h_full()
+                                    .size_full()
                                     .overflow_hidden()
                                     .pt_7()
                                     // Fixed container, common to every screen — currently just
@@ -428,8 +434,9 @@ impl Render for CrittoUtil {
                                                 }
                                             }),
                                     )
-                            .when(self.agent.open, |row| {
-                                row.child(views::agent_panel::render(self, window, cx))
+                            )
+                            .when(self.agent.open, |wrap| {
+                                wrap.child(views::agent_panel::render(self, window, cx))
                             }),
                     )
                     .into_any_element()
