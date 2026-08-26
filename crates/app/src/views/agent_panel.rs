@@ -141,10 +141,10 @@ pub fn sheet_content_with_data(
         .flex()
         .flex_col()
         .size_full()
-        .gap_3()
-        .p_3()
+        .gap_2()
+        .p_2()
         .child({
-            let mut list = div().id("agent-sheet-messages").flex().flex_col().flex_1().gap_3().overflow_y_scroll();
+            let mut list = div().id("agent-sheet-messages").flex().flex_col().flex_1().gap_2().overflow_y_scroll();
             for item in display_items {
                 match item {
                     DisplayItem::Message { role, content } => {
