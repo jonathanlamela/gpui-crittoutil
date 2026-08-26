@@ -45,6 +45,8 @@ pub fn render(
             spread_radius: gpui::px(0.0),
             inset: false,
         }])
+        // Capture clicks so they don't fall through to content underneath
+        .on_click(cx.listener(|_, _, _, _| {}))
         .child(
             div()
                 .flex()
