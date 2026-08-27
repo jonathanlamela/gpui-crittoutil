@@ -25,5 +25,11 @@ pub fn init(cx: &mut App) {
     Theme::global_mut(cx).dark_theme = config_dark;
 
     Theme::change(ThemeMode::Light, None, cx);
+
+    // The agent sheet should behave like a full-height sidebar flush with the
+    // window edges, not leave a title-bar-sized gap above it (gpui-component's
+    // default reserves TITLE_BAR_HEIGHT so sheets don't overlap a title bar).
+    Theme::global_mut(cx).sheet.margin_top = gpui::px(0.0);
+
     cx.refresh_windows();
 }

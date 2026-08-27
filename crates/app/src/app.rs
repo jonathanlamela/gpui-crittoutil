@@ -1,19 +1,18 @@
 use gpui::{
-    px, AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
-    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _,
+    AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
+    Styled, Window, div, prelude::FluentBuilder as _,
 };
 use gpui_component::ActiveTheme as _;
-use gpui_component::Sizable as _;
-use gpui_component::WindowExt;
 use gpui_component::IconName;
+use gpui_component::WindowExt;
 use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::input::{InputState, TextareaState};
 
 use agent::{self, ChatMessage};
 use converter::ConvType;
 use crypto_core::crypto_meta::{AlgId, DECRYPT_ALGORITHMS, ENCRYPT_ALGORITHMS};
-use session::{self, KeyEntry, Session, StoredKeyEntry};
 use home::Route;
+use session::{self, KeyEntry, Session, StoredKeyEntry};
 
 use crate::views;
 
@@ -114,7 +113,9 @@ impl CrittoUtil {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let agent_input = cx.new(|cx| {
             TextareaState::new(window, cx)
-                .placeholder("Ask the agent to generate a key,\nencrypt, decrypt, or convert a value…")
+                .placeholder(
+                    "Ask the agent to generate a key,\nencrypt, decrypt, or convert a value…",
+                )
                 .rows(3)
                 .submit_on_enter(true)
         });
@@ -274,23 +275,32 @@ impl CrittoUtil {
         let entity2 = entity.clone();
         self.agent.open = true;
         cx.notify();
-        window.open_sheet_at(gpui_component::Placement::Right, cx, move |sheet, _window, cx| {
-            let entity3 = entity2.clone();
-            sheet
-                .title("Agent")
-                .size(gpui::px(420.0))
-                .overlay(true)
-                .overlay_closable(true)
-                .on_close(move |_, _, cx| {
-                    entity3.update(cx, |this, cx| {
-                        this.agent.open = false;
-                        cx.notify();
-                    });
-                })
-                .child(views::agent_panel::sheet_content_with_data(
-                    &entity, messages.clone(), input.clone(), is_running, expanded.clone(), cx,
-                ))
-        });
+        window.open_sheet_at(
+            gpui_component::Placement::Right,
+            cx,
+            move |sheet, _window, cx| {
+                let entity3 = entity2.clone();
+                sheet
+                    .title("Agent")
+                    .size(gpui::px(420.0))
+                    .overlay(true)
+                    .overlay_closable(true)
+                    .on_close(move |_, _, cx| {
+                        entity3.update(cx, |this, cx| {
+                            this.agent.open = false;
+                            cx.notify();
+                        });
+                    })
+                    .child(views::agent_panel::sheet_content_with_data(
+                        &entity,
+                        messages.clone(),
+                        input.clone(),
+                        is_running,
+                        expanded.clone(),
+                        cx,
+                    ))
+            },
+        );
     }
 
     /// Send the agent panel's current input as a user message, then run the
@@ -333,7 +343,8 @@ impl CrittoUtil {
                     let base_url = agent::DEFAULT_BASE_URL;
                     // Always ask LM Studio which model it actually has loaded
                     // rather than requiring the user to type it in.
-                    let model = agent::fetch_first_model_id(base_url).unwrap_or_else(|| "local-model".to_string());
+                    let model = agent::fetch_first_model_id(base_url)
+                        .unwrap_or_else(|| "local-model".to_string());
                     let new_keys = agent::run_turn(base_url, &model, &mut history);
                     (history, new_keys)
                 })
@@ -400,76 +411,65 @@ impl Render for CrittoUtil {
                     .text_color(cx.theme().foreground)
                     .child(views::sidebar::render(self, window, cx))
                     .child(
-                        div()
-                            .flex()
-                            .flex_1()
-                            .min_w_0()
-                            .h_full()
-                            .relative()
-                            .child(
-                                div()
-                                    .id("crittoutil-content")
-                                    .flex()
-                                    .flex_col()
-                                    .size_full()
-                                    .overflow_hidden()
-                                    .pt_7()
-                                    // Fixed container, common to every screen — currently just
-                                    // the agent toggle, but any chrome that should appear above
-                                    // every section (not just some) belongs here, not repeated
-                                    // per-view.
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .justify_end()
-                                            .gap_2()
-                                            .px_6()
-                                            .pt_3()
-                                            .child(
-                                                Button::new("toggle-agent-mode")
-                                                    .icon(IconName::Bot)
-                                                    .label("Agent")
-                                                    .map(|btn| {
-                                                        if self.agent.open { btn.primary() } else { btn.info() }
-                                                    })
-                                                    .on_click(cx.listener(|this, _, window, cx| {
-                                                        this.toggle_agent(window, cx);
-                                                    })),
-                                            ),
-                                    )
-                                    // The section-specific container for whichever screen is active.
-                                    .child(
-                                        div()
-                                            .flex_1()
-                                            .min_h_0()
-                                            .overflow_hidden()
-                                            .child(match self.route {
-                                                Route::Home => {
-                                                    views::home::render(self, window, cx).into_any_element()
+                        div().flex().flex_1().min_w_0().h_full().relative().child(
+                            div()
+                                .id("crittoutil-content")
+                                .flex()
+                                .flex_col()
+                                .size_full()
+                                .overflow_hidden()
+                                .pt_7()
+                                // Fixed container, common to every screen — currently just
+                                // the agent toggle, but any chrome that should appear above
+                                // every section (not just some) belongs here, not repeated
+                                // per-view.
+                                .child(
+                                    div().flex().justify_end().gap_2().px_6().pt_3().child(
+                                        Button::new("toggle-agent-mode")
+                                            .icon(IconName::Bot)
+                                            .label("Agent")
+                                            .map(|btn| {
+                                                if self.agent.open {
+                                                    btn.primary()
+                                                } else {
+                                                    btn.info()
                                                 }
-                                                Route::Converter => {
-                                                    views::converter::render(self, window, cx)
-                                                        .into_any_element()
-                                                }
-                                                Route::KeyGenerator => {
-                                                    views::key_generator::render(self, window, cx)
-                                                        .into_any_element()
-                                                }
-                                                Route::Encrypter => {
-                                                    views::encrypter::render(self, window, cx)
-                                                        .into_any_element()
-                                                }
-                                                Route::Decrypter => {
-                                                    views::decrypter::render(self, window, cx)
-                                                        .into_any_element()
-                                                }
-                                                Route::FileHasher => {
-                                                    views::file_hasher::render(self, window, cx)
-                                                        .into_any_element()
-                                                }
-                                            }),
-                                    )
-                            ),
+                                            })
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                this.toggle_agent(window, cx);
+                                            })),
+                                    ),
+                                )
+                                // The section-specific container for whichever screen is active.
+                                .child(
+                                    div().flex_1().min_h_0().overflow_hidden().child(
+                                        match self.route {
+                                            Route::Home => views::home::render(self, window, cx)
+                                                .into_any_element(),
+                                            Route::Converter => {
+                                                views::converter::render(self, window, cx)
+                                                    .into_any_element()
+                                            }
+                                            Route::KeyGenerator => {
+                                                views::key_generator::render(self, window, cx)
+                                                    .into_any_element()
+                                            }
+                                            Route::Encrypter => {
+                                                views::encrypter::render(self, window, cx)
+                                                    .into_any_element()
+                                            }
+                                            Route::Decrypter => {
+                                                views::decrypter::render(self, window, cx)
+                                                    .into_any_element()
+                                            }
+                                            Route::FileHasher => {
+                                                views::file_hasher::render(self, window, cx)
+                                                    .into_any_element()
+                                            }
+                                        },
+                                    ),
+                                ),
+                        ),
                     )
                     .into_any_element()
             })
